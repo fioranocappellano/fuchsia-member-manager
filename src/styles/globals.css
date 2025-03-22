@@ -1,7 +1,7 @@
 
 /* Admin Dashboard Styles */
 .admin-dashboard-container {
-  @apply min-h-screen bg-gradient-to-b from-jf-dark to-black/95 text-white;
+  @apply min-h-screen bg-gradient-to-b from-black to-gray-900 text-white;
 }
 
 .admin-dashboard-header {
@@ -14,23 +14,23 @@
 }
 
 .admin-tabs-header {
-  @apply flex overflow-x-auto mb-8 bg-black/30 rounded-lg p-1 border border-white/10 backdrop-blur-sm;
+  @apply flex overflow-x-auto mb-8 bg-black/30 rounded-full p-1.5 border border-white/10 backdrop-blur-sm;
 }
 
 .admin-tabs-trigger {
-  @apply px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 rounded-md transition-all duration-200 whitespace-nowrap;
+  @apply px-5 py-2.5 rounded-full text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-200 whitespace-nowrap;
 }
 
 .admin-tabs-trigger[data-state="active"] {
-  @apply bg-jf-purple text-white font-medium;
+  @apply bg-[#D946EF] text-white font-medium;
 }
 
 .admin-card {
-  @apply bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden shadow-xl hover:shadow-jf-purple/5 transition-all duration-300 mb-6;
+  @apply bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden shadow-xl hover:shadow-[#D946EF]/5 transition-all duration-300 mb-6;
 }
 
 .admin-card-header {
-  @apply p-4 border-b border-white/10 bg-gradient-to-r from-jf-purple/20 to-transparent;
+  @apply p-4 border-b border-white/10 bg-gradient-to-r from-[#D946EF]/20 to-transparent;
 }
 
 .admin-card-content {
@@ -53,7 +53,7 @@
 .admin-form textarea,
 .admin-form select {
   @apply w-full p-3 bg-black/60 border border-white/10 rounded-md text-white placeholder-gray-500 shadow-inner shadow-black/20
-  focus:outline-none focus:ring-2 focus:ring-jf-purple focus:ring-opacity-50 focus:border-transparent
+  focus:outline-none focus:ring-2 focus:ring-[#D946EF] focus:ring-opacity-50 focus:border-transparent
   hover:border-white/20 transition-all duration-200;
 }
 
@@ -80,7 +80,7 @@
 }
 
 .member-card {
-  @apply bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden shadow-lg hover:shadow-jf-purple/10 transition-all duration-300;
+  @apply bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden shadow-lg hover:shadow-[#D946EF]/10 transition-all duration-300;
 }
 
 .member-name {
@@ -88,7 +88,7 @@
 }
 
 .member-role {
-  @apply text-jf-purple text-sm mb-2;
+  @apply text-[#D946EF] text-sm mb-2;
 }
 
 .member-meta {
@@ -104,7 +104,7 @@
 }
 
 .admin-button-primary {
-  @apply bg-jf-purple hover:bg-jf-purple/90 text-white;
+  @apply bg-[#D946EF] hover:bg-[#D946EF]/90 text-white;
 }
 
 .admin-button-secondary {
@@ -116,7 +116,7 @@
 }
 
 .admin-avatar {
-  @apply w-24 h-24 object-cover rounded-lg border-2 border-jf-purple/30 shadow-lg;
+  @apply w-24 h-24 object-cover rounded-lg border-2 border-[#D946EF]/30 shadow-lg;
 }
 
 /* Status badges */
@@ -137,7 +137,7 @@
 }
 
 .add-button {
-  @apply inline-flex items-center gap-2 px-4 py-2 bg-jf-purple hover:bg-jf-purple/90 text-white rounded-full font-medium shadow-lg hover:shadow-jf-purple/20 transition-all duration-200;
+  @apply inline-flex items-center gap-2 px-4 py-2 bg-[#D946EF] hover:bg-[#D946EF]/90 text-white rounded-full font-medium shadow-lg hover:shadow-[#D946EF]/20 transition-all duration-200;
 }
 
 .edit-button {
@@ -158,18 +158,18 @@
 /* Enhanced Input Fields */
 .enhanced-input {
   @apply bg-black/60 border border-white/10 rounded-md px-4 py-3 text-white placeholder:text-gray-500 
-  focus:border-jf-purple/50 focus:ring-2 focus:ring-jf-purple/30 focus:outline-none transition-all duration-200
+  focus:border-[#D946EF]/50 focus:ring-2 focus:ring-[#D946EF]/30 focus:outline-none transition-all duration-200
   hover:border-white/20 shadow-inner shadow-black/20;
 }
 
 .enhanced-textarea {
   @apply bg-black/60 border border-white/10 rounded-md px-4 py-3 text-white placeholder:text-gray-500 
-  focus:border-jf-purple/50 focus:ring-2 focus:ring-jf-purple/30 focus:outline-none transition-all duration-200
+  focus:border-[#D946EF]/50 focus:ring-2 focus:ring-[#D946EF]/30 focus:outline-none transition-all duration-200
   hover:border-white/20 min-h-[120px] resize-y shadow-inner shadow-black/20;
 }
 
 .admin-logout-button {
-  @apply flex items-center gap-2 px-3 py-1.5 rounded-md bg-black/30 hover:bg-black/50 
+  @apply flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/30 hover:bg-black/50 
   border border-white/10 hover:border-white/20 text-white transition-all duration-200
   text-sm font-medium;
 }
@@ -186,3 +186,4 @@
 .form-hint {
   @apply text-xs text-gray-500 mt-1;
 }
+

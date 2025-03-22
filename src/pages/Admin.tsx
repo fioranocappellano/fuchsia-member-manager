@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "../contexts/AuthContext";
-import FAQManager from "../components/admin/FAQManager";
-import FooterResourceManager from "../components/admin/FooterResourceManager";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import FAQManager from "@/components/admin/FAQManager";
+import FooterResourceManager from "@/components/admin/FooterResourceManager";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Upload, Plus, Save, X, Edit, Trash2, Users, Shield, Award, Gamepad2, HelpCircle, Link2, Layout, LogOut } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import Navbar from "../components/Navbar";
+import Navbar from "@/components/Navbar";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 const AddMemberForm = ({ onAddMember }) => {
   const [name, setName] = useState("");
@@ -66,65 +67,82 @@ const AddMemberForm = ({ onAddMember }) => {
   };
 
   return (
-    <Card className="admin-card mb-6">
-      <CardHeader className="admin-card-header">
-        <CardTitle className="admin-card-title">
-          <Plus size={18} /> Add New Team Member
+    <Card className="border border-white/10 bg-black/40 backdrop-blur-sm shadow-xl mb-8 overflow-hidden transition-all duration-300 hover:shadow-[#D946EF]/10">
+      <CardHeader className="bg-gradient-to-r from-[#D946EF]/20 to-transparent border-b border-white/10 px-6 py-4">
+        <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+          <Plus size={18} className="text-[#D946EF]" /> Add New Team Member
         </CardTitle>
       </CardHeader>
-      <CardContent className="admin-card-content">
-        <form onSubmit={handleSubmit} className="admin-form space-y-4">
-          <div>
-            <label>Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="Enter member name"
-            />
+      <CardContent className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="form-group">
+              <label className="form-label">Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Enter member name"
+                className="enhanced-input w-full"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">Image URL</label>
+              <input
+                type="text"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
+                required
+                placeholder="Enter image URL"
+                className="enhanced-input w-full"
+              />
+            </div>
           </div>
-          <div>
-            <label>Image URL</label>
-            <input
-              type="text"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              required
-              placeholder="Enter image URL"
-            />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="form-group">
+              <label className="form-label">Role</label>
+              <input
+                type="text"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                required
+                placeholder="Enter role"
+                className="enhanced-input w-full"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">Join Date</label>
+              <input
+                type="text"
+                value={joinDate}
+                onChange={(e) => setJoinDate(e.target.value)}
+                placeholder="e.g. September 2015"
+                className="enhanced-input w-full"
+              />
+            </div>
           </div>
-          <div>
-            <label>Role</label>
-            <input
-              type="text"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              required
-              placeholder="Enter role"
-            />
-          </div>
-          <div>
-            <label>Join Date</label>
-            <input
-              type="text"
-              value={joinDate}
-              onChange={(e) => setJoinDate(e.target.value)}
-              placeholder="e.g. September 2015"
-            />
-          </div>
-          <div>
-            <label>Achievements (one per line)</label>
+          
+          <div className="form-group">
+            <label className="form-label">Achievements (one per line)</label>
             <textarea
-              className="min-h-[120px]"
+              className="enhanced-textarea w-full"
               value={achievements}
               onChange={(e) => setAchievements(e.target.value)}
               placeholder="Enter each achievement on a new line"
               required
             />
           </div>
-          <Button type="submit" className="w-full add-button">
-            <Plus size={16} /> Add Member
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-[#D946EF] hover:bg-[#D946EF]/90 text-white font-medium py-3 rounded-lg shadow-lg shadow-[#D946EF]/20 flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-xl hover:shadow-[#D946EF]/30"
+          >
+            <Plus size={18} />
+            <span>Add Member</span>
           </Button>
         </form>
       </CardContent>
@@ -252,99 +270,105 @@ const MemberManager = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Award size={20} className="text-jf-purple" /> Team Members Management
+          <Award size={24} className="text-[#D946EF]" /> Team Members Management
         </h2>
-        <Button className="add-button">
-          <Plus size={18} /> Add Member
+        <Button className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white px-5 py-2.5 rounded-full shadow-md hover:shadow-[#D946EF]/20 transition-all duration-300">
+          <Plus size={18} className="mr-2" /> Add Member
         </Button>
       </div>
       
       <AddMemberForm onAddMember={handleAddMember} />
       
-      <h2 className="text-xl font-bold mb-4 text-white/90">Current Team Members</h2>
+      <h2 className="text-xl font-bold mb-4 text-white/90 mt-8">Current Team Members</h2>
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-jf-purple"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D946EF]"></div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid gap-6 md:grid-cols-2">
           {members.map((member) => (
-            <Card key={member.id} className="member-card">
+            <Card key={member.id} className="border border-white/10 bg-black/40 backdrop-blur-sm shadow-lg hover:shadow-[#D946EF]/20 transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="w-full md:w-1/4 flex justify-center">
-                    <img 
-                      src={member.image} 
-                      alt={member.name} 
-                      className="admin-avatar" 
-                    />
+                    <div className="w-24 h-24 overflow-hidden rounded-lg border-2 border-[#D946EF]/30 shadow-lg">
+                      <AspectRatio ratio={1} className="bg-black/40">
+                        <img 
+                          src={member.image} 
+                          alt={member.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      </AspectRatio>
+                    </div>
                   </div>
                   <div className="w-full md:w-3/4">
                     {editingMember && editingMember.id === member.id ? (
-                      <div className="admin-form space-y-4">
-                        <div>
-                          <label>Name</label>
+                      <div className="space-y-4">
+                        <div className="form-group">
+                          <label className="form-label">Name</label>
                           <input
                             type="text"
+                            className="enhanced-input"
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                           />
                         </div>
-                        <div>
-                          <label>Image URL</label>
+                        <div className="form-group">
+                          <label className="form-label">Image URL</label>
                           <input
                             type="text"
+                            className="enhanced-input"
                             value={editImage}
                             onChange={(e) => setEditImage(e.target.value)}
                           />
                         </div>
-                        <div>
-                          <label>Role</label>
+                        <div className="form-group">
+                          <label className="form-label">Role</label>
                           <input
                             type="text"
+                            className="enhanced-input"
                             value={editRole}
                             onChange={(e) => setEditRole(e.target.value)}
                           />
                         </div>
-                        <div>
-                          <label>Join Date</label>
+                        <div className="form-group">
+                          <label className="form-label">Join Date</label>
                           <input
                             type="text"
+                            className="enhanced-input"
                             value={editJoinDate}
                             onChange={(e) => setEditJoinDate(e.target.value)}
                           />
                         </div>
-                        <div>
-                          <label>Achievements (one per line)</label>
+                        <div className="form-group">
+                          <label className="form-label">Achievements (one per line)</label>
                           <textarea
-                            className="min-h-[120px]"
+                            className="enhanced-textarea"
                             value={editAchievements}
                             onChange={(e) => setEditAchievements(e.target.value)}
                           />
                         </div>
                         <div className="flex space-x-2">
-                          <Button onClick={handleUpdate} className="admin-button-primary">
-                            <Save size={16} /> Save Changes
+                          <Button onClick={handleUpdate} className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white">
+                            <Save size={16} className="mr-1.5" /> Save Changes
                           </Button>
                           <Button 
                             variant="outline" 
                             onClick={() => setEditingMember(null)}
-                            className="admin-button-secondary"
+                            className="border-white/10 hover:bg-white/5 text-white"
                           >
-                            <X size={16} /> Cancel
+                            <X size={16} className="mr-1.5" /> Cancel
                           </Button>
                         </div>
                       </div>
                     ) : (
                       <div>
-                        <h3 className="member-name">{member.name}</h3>
-                        <p className="member-role">{member.role}</p>
-                        {member.join_date && (
-                          <p className="member-meta">Joined: {member.join_date}</p>
-                        )}
+                        <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
+                        <p className="text-[#D946EF] text-sm mb-2">{member.role}</p>
+                        <p className="text-xs text-gray-400 mb-3">Joined: {member.join_date}</p>
                         <h4 className="font-semibold mb-2 text-white/80">Achievements:</h4>
-                        <ul className="member-achievements">
+                        <ul className="space-y-1 text-sm">
                           {member.achievements.map((achievement, idx) => (
                             <li key={idx} className="text-gray-300">• {achievement}</li>
                           ))}
@@ -352,16 +376,15 @@ const MemberManager = () => {
                         <div className="flex space-x-2 mt-4">
                           <Button 
                             onClick={() => handleEdit(member)}
-                            className="edit-button"
+                            className="bg-black/30 hover:bg-black/50 border border-white/10 hover:border-white/20 text-white transition-all duration-200"
                           >
-                            <Edit size={16} /> Edit
+                            <Edit size={16} className="mr-1.5" /> Edit
                           </Button>
                           <Button 
-                            variant="destructive" 
                             onClick={() => handleDelete(member.id)}
-                            className="delete-button"
+                            className="bg-red-500/70 hover:bg-red-500/80 text-white transition-all duration-200"
                           >
-                            <Trash2 size={16} /> Delete
+                            <Trash2 size={16} className="mr-1.5" /> Delete
                           </Button>
                         </div>
                       </div>
@@ -950,386 +973,4 @@ const AdminManager = () => {
         .update({ is_active: !isCurrentlyActive })
         .eq('id', id);
 
-      if (error) throw error;
-
-      toast({
-        title: isCurrentlyActive ? "Admin deactivated" : "Admin activated",
-        description: isCurrentlyActive 
-          ? "The admin has been deactivated successfully"
-          : "The admin has been activated successfully",
-      });
-
-      fetchAdmins();
-    } catch (error) {
-      console.error("Error updating admin status:", error);
-      toast({
-        title: "Error updating admin",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteAdmin = async (id) => {
-    if (id === firstAdmin) {
-      toast({
-        title: "Cannot delete first admin",
-        description: "The first registered admin cannot be deleted for security reasons",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (id === user?.id) {
-      toast({
-        title: "Cannot delete yourself",
-        description: "You cannot remove your own admin privileges",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (window.confirm("Are you sure you want to delete this admin?")) {
-      try {
-        const { error } = await supabase
-          .from('admins')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Admin deleted",
-          description: "The admin has been deleted successfully",
-        });
-
-        fetchAdmins();
-      } catch (error) {
-        console.error("Error deleting admin:", error);
-        toast({
-          title: "Error deleting admin",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Shield size={20} className="text-jf-purple" /> Admin Management
-        </h2>
-      </div>
-      
-      <Card className="admin-card mb-6">
-        <CardHeader className="admin-card-header">
-          <CardTitle className="admin-card-title">
-            <Plus size={18} /> Add New Admin
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="admin-card-content">
-          <div className="flex gap-2">
-            <Input
-              type="email"
-              value={newAdminEmail}
-              onChange={(e) => setNewAdminEmail(e.target.value)}
-              placeholder="Enter email address"
-              className="flex-1 bg-black/50 border-white/10 text-white"
-            />
-            <Button onClick={handleAddAdmin} className="add-button">
-              <Plus size={16} /> Add Admin
-            </Button>
-          </div>
-          <p className="text-sm text-gray-400 mt-2">
-            Note: The user must already have an account in the system
-          </p>
-        </CardContent>
-      </Card>
-      
-      <h2 className="text-xl font-bold mb-4 text-white/90">Current Admins</h2>
-
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-jf-purple"></div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {admins.length === 0 ? (
-            <Card className="admin-card">
-              <CardContent className="admin-card-content">
-                <p className="text-center py-8 text-gray-400">No admins found</p>
-              </CardContent>
-            </Card>
-          ) : (
-            admins.map((admin) => (
-              <Card key={admin.id} className="admin-card">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-white">{admin.email}</h3>
-                      <p className="text-sm text-gray-400">ID: {admin.id}</p>
-                      <div className="mt-1">
-                        {admin.is_active ? (
-                          <span className="status-badge status-active">
-                            Active
-                          </span>
-                        ) : (
-                          <span className="status-badge status-inactive">
-                            Inactive
-                          </span>
-                        )}
-                        {admin.id === firstAdmin && (
-                          <span className="status-badge bg-amber-500/20 text-amber-300 border border-amber-500/30 ml-2">
-                            Primary Admin
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleToggleAdminStatus(admin.id, admin.is_active)}
-                        className={admin.is_active ? "bg-white/10 hover:bg-white/15 text-white" : "bg-green-500/20 hover:bg-green-500/30 text-green-300"}
-                        disabled={admin.id === firstAdmin}
-                      >
-                        {admin.is_active ? "Deactivate" : "Activate"}
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => handleDeleteAdmin(admin.id)}
-                        className="delete-button"
-                        disabled={admin.id === user?.id || admin.id === firstAdmin}
-                      >
-                        <Trash2 size={16} /> Delete
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-      )}
-
-      <h2 className="text-xl font-bold my-6 text-white/90">Registered Users</h2>
-      <Card className="admin-card">
-        <CardContent className="p-0">
-          <table className="w-full">
-            <thead className="bg-black/50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Admin Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800">
-              {users.map((user) => {
-                const isAdmin = admins.some(admin => admin.id === user.id && admin.is_active);
-                const isPrimaryAdmin = user.id === firstAdmin;
-                return (
-                  <tr key={user.id} className="hover:bg-white/5">
-                    <td className="px-6 py-4 text-sm text-white">{user.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-400">{user.id.substring(0, 8)}...</td>
-                    <td className="px-6 py-4 text-sm text-gray-400">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {isAdmin && isPrimaryAdmin ? (
-                        <span className="status-badge bg-amber-500/20 text-amber-300 border border-amber-500/30">Primary Admin</span>
-                      ) : isAdmin ? (
-                        <span className="status-badge status-active">Admin</span>
-                      ) : (
-                        <span className="status-badge bg-gray-500/20 text-gray-300 border border-gray-500/30">User</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-400">No users found</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-const Admin = () => {
-  const { user, loading: authLoading, signOut } = useAuth();
-  const navigate = useNavigate();
-  const { translations } = useLanguage();
-  const [adminStatus, setAdminStatus] = useState(false);
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('admins')
-          .select('*')
-          .eq('id', user.id)
-          .eq('is_active', true)
-          .single();
-        
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-        
-        setAdminStatus(!!data);
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        toast({
-          title: "Error",
-          description: "Failed to verify admin permissions",
-          variant: "destructive",
-        });
-      } finally {
-        setCheckingAdmin(false);
-      }
-    };
-
-    if (user) {
-      checkAdminStatus();
-    }
-  }, [user, toast]);
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      navigate('/');
-      toast({
-        title: "Logout effettuato",
-        description: "Hai effettuato il logout con successo.",
-      });
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast({
-        title: "Errore durante il logout",
-        description: "Si è verificato un problema durante il logout",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (authLoading || checkingAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-jf-dark">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-jf-purple"></div>
-      </div>
-    );
-  }
-
-  if (!adminStatus) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen flex items-center justify-center bg-jf-dark">
-          <div className="text-center text-white bg-black/40 backdrop-blur-md p-8 rounded-xl border border-white/10 shadow-xl">
-            <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-            <p className="mb-6">You do not have permission to access this area.</p>
-            <Button onClick={() => navigate("/")} className="bg-jf-purple hover:bg-jf-purple/90">Return to Home</Button>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <Navbar />
-      <div className="admin-dashboard-container pt-24">
-        <div className="container mx-auto max-w-6xl px-4">
-          <div className="admin-dashboard-header">
-            <h1 className="admin-dashboard-title">Admin Dashboard</h1>
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                className="admin-logout-button"
-              >
-                <LogOut size={16} /> Logout
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate("/")} 
-                className="bg-black/30 border-white/10 text-white hover:bg-white/10"
-              >
-                Back to Site
-              </Button>
-            </div>
-          </div>
-
-          <Tabs defaultValue="members" className="w-full">
-            <TabsList className="admin-tabs-header">
-              <TabsTrigger value="members" className="admin-tabs-trigger">
-                <Award size={16} className="mr-2" /> Team Members
-              </TabsTrigger>
-              <TabsTrigger value="games" className="admin-tabs-trigger">
-                <Gamepad2 size={16} className="mr-2" /> Best Games
-              </TabsTrigger>
-              <TabsTrigger value="faqs" className="admin-tabs-trigger">
-                <HelpCircle size={16} className="mr-2" /> FAQs
-              </TabsTrigger>
-              <TabsTrigger value="resources" className="admin-tabs-trigger">
-                <Link2 size={16} className="mr-2" /> Resources
-              </TabsTrigger>
-              <TabsTrigger value="admins" className="admin-tabs-trigger">
-                <Shield size={16} className="mr-2" /> Users & Admins
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="members" className="mt-6">
-              <MemberManager />
-            </TabsContent>
-            
-            <TabsContent value="games" className="mt-6">
-              <GameManager />
-            </TabsContent>
-            
-            <TabsContent value="faqs" className="mt-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <HelpCircle size={20} className="text-jf-purple" /> FAQ Management
-                </h2>
-              </div>
-              <FAQManager />
-            </TabsContent>
-            
-            <TabsContent value="resources" className="mt-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Link2 size={20} className="text-jf-purple" /> Resources Management
-                </h2>
-              </div>
-              <FooterResourceManager />
-            </TabsContent>
-            
-            <TabsContent value="admins" className="mt-6">
-              <AdminManager />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-    </>
-  );
-};
-
-export default Admin;
+      if (error)
