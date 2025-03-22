@@ -973,4 +973,4 @@ const AdminManager = () => {
         .update({ is_active: !isCurrentlyActive })
         .eq('id', id);
 
-      if (error)
+      if
