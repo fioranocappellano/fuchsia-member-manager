@@ -157,20 +157,10 @@ const Admin = () => {
             </TabsContent>
             
             <TabsContent value="faqs" className="mt-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  FAQ Management
-                </h2>
-              </div>
               <FAQManager />
             </TabsContent>
             
             <TabsContent value="resources" className="mt-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  Resources Management
-                </h2>
-              </div>
               <FooterResourceManager />
             </TabsContent>
             

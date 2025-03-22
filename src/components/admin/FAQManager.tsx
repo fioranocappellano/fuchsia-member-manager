@@ -1,13 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Plus, Trash, PenSquare } from "lucide-react";
+import { Loader2, Plus, Trash, PenSquare, ArrowUp, ArrowDown, HelpCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,8 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { moveItemUp, moveItemDown } from "@/lib/utils";
 
 interface FAQ {
   id: string;
@@ -40,6 +43,7 @@ const FAQManager = () => {
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const fetchFAQs = async () => {
@@ -86,6 +90,8 @@ const FAQManager = () => {
 
   const handleAddFaq = async () => {
     try {
+      setIsSubmitting(true);
+      
       if (!newFaq.question_it || !newFaq.question_en || !newFaq.answer_it || !newFaq.answer_en) {
         toast({
           title: "Validation Error",
@@ -132,11 +138,15 @@ const FAQManager = () => {
         description: error.message || "Failed to add FAQ",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleEditFaq = async () => {
     try {
+      setIsSubmitting(true);
+      
       if (!editingFaq) return;
       
       // Keep the original position when updating
@@ -169,6 +179,8 @@ const FAQManager = () => {
         description: error.message || "Failed to update FAQ",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -219,17 +231,67 @@ const FAQManager = () => {
     }
   };
 
+  const handleMoveUp = async (index: number) => {
+    if (index <= 0) return;
+    
+    try {
+      const updatedFaqs = moveItemUp([...faqs], index);
+      const faqToUpdate = updatedFaqs[index - 1];
+      const prevFaq = updatedFaqs[index];
+      
+      await Promise.all([
+        supabase.from("faqs").update({ position: faqToUpdate.position }).eq("id", faqToUpdate.id),
+        supabase.from("faqs").update({ position: prevFaq.position }).eq("id", prevFaq.id)
+      ]);
+      
+      fetchFAQs();
+    } catch (error: any) {
+      console.error("Error moving FAQ:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reorder FAQ",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMoveDown = async (index: number) => {
+    if (index >= faqs.length - 1) return;
+    
+    try {
+      const updatedFaqs = moveItemDown([...faqs], index);
+      const faqToUpdate = updatedFaqs[index + 1];
+      const nextFaq = updatedFaqs[index];
+      
+      await Promise.all([
+        supabase.from("faqs").update({ position: faqToUpdate.position }).eq("id", faqToUpdate.id),
+        supabase.from("faqs").update({ position: nextFaq.position }).eq("id", nextFaq.id)
+      ]);
+      
+      fetchFAQs();
+    } catch (error: any) {
+      console.error("Error moving FAQ:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reorder FAQ",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold">FAQ Management</h2>
+          <h2 className="text-3xl font-bold text-white flex items-center gap-2">
+            <HelpCircle className="h-7 w-7 text-[#D946EF]" /> FAQ Management
+          </h2>
           <p className="text-muted-foreground mt-1">Manage frequently asked questions</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button 
-              className="bg-[#D946EF] hover:bg-[#D946EF]/90" 
+              className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white font-medium shadow-md shadow-[#D946EF]/20 hover:shadow-lg hover:shadow-[#D946EF]/30 transition-all duration-200"
               onClick={() => {
                 setEditingFaq(null);
                 setNewFaq({
@@ -245,14 +307,19 @@ const FAQManager = () => {
               <Plus className="mr-2 h-4 w-4" /> Add FAQ
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-jf-dark border-[#D946EF]/30 text-jf-light">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-jf-dark border-[#D946EF]/20 text-jf-light">
             <DialogHeader>
-              <DialogTitle className="text-jf-light">{editingFaq ? "Edit FAQ" : "Add FAQ"}</DialogTitle>
+              <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-[#D946EF]" />
+                {editingFaq ? "Edit FAQ" : "Add New FAQ"}
+              </DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-5 py-4">
+              <div className="grid grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <Label htmlFor="question_it">Question (Italian)</Label>
+                  <Label htmlFor="question_it" className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                    Question (Italian)
+                  </Label>
                   <Input
                     id="question_it"
                     value={editingFaq ? editingFaq.question_it : newFaq.question_it}
@@ -260,11 +327,14 @@ const FAQManager = () => {
                       ? setEditingFaq({...editingFaq, question_it: e.target.value})
                       : setNewFaq({...newFaq, question_it: e.target.value})
                     }
-                    className="bg-jf-gray/30 border-[#D946EF]/30 text-white"
+                    className="bg-black/60 backdrop-blur-sm border-white/10 text-white shadow-inner shadow-black/20 focus-visible:ring-[#D946EF]"
+                    placeholder="Inserisci la domanda in italiano"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="question_en">Question (English)</Label>
+                  <Label htmlFor="question_en" className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                    Question (English)
+                  </Label>
                   <Input
                     id="question_en"
                     value={editingFaq ? editingFaq.question_en : newFaq.question_en}
@@ -272,44 +342,51 @@ const FAQManager = () => {
                       ? setEditingFaq({...editingFaq, question_en: e.target.value})
                       : setNewFaq({...newFaq, question_en: e.target.value})
                     }
-                    className="bg-jf-gray/30 border-[#D946EF]/30 text-white"
+                    className="bg-black/60 backdrop-blur-sm border-white/10 text-white shadow-inner shadow-black/20 focus-visible:ring-[#D946EF]"
+                    placeholder="Enter question in English"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <Label htmlFor="answer_it">Answer (Italian) - Markdown</Label>
+                  <Label htmlFor="answer_it" className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                    Answer (Italian) - Markdown
+                  </Label>
                   <Textarea
                     id="answer_it"
-                    rows={6}
+                    rows={8}
                     value={editingFaq ? editingFaq.answer_it : newFaq.answer_it}
                     onChange={(e) => editingFaq
                       ? setEditingFaq({...editingFaq, answer_it: e.target.value})
                       : setNewFaq({...newFaq, answer_it: e.target.value})
                     }
-                    placeholder="Support markdown formatting"
-                    className="bg-jf-gray/30 border-[#D946EF]/30 text-white placeholder:text-gray-500"
+                    placeholder="Supporta la formattazione markdown"
+                    className="min-h-[180px] bg-black/60 backdrop-blur-sm border-white/10 text-white shadow-inner shadow-black/20 focus-visible:ring-[#D946EF]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="answer_en">Answer (English) - Markdown</Label>
+                  <Label htmlFor="answer_en" className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                    Answer (English) - Markdown
+                  </Label>
                   <Textarea
                     id="answer_en"
-                    rows={6}
+                    rows={8}
                     value={editingFaq ? editingFaq.answer_en : newFaq.answer_en}
                     onChange={(e) => editingFaq
                       ? setEditingFaq({...editingFaq, answer_en: e.target.value})
                       : setNewFaq({...newFaq, answer_en: e.target.value})
                     }
-                    placeholder="Support markdown formatting"
-                    className="bg-jf-gray/30 border-[#D946EF]/30 text-white placeholder:text-gray-500"
+                    placeholder="Supports markdown formatting"
+                    className="min-h-[180px] bg-black/60 backdrop-blur-sm border-white/10 text-white shadow-inner shadow-black/20 focus-visible:ring-[#D946EF]"
                   />
                 </div>
               </div>
               {!editingFaq && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <Label htmlFor="position">Position</Label>
+                    <Label htmlFor="position" className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                      Position
+                    </Label>
                     <Input
                       id="position"
                       type="number"
@@ -318,7 +395,7 @@ const FAQManager = () => {
                         const value = parseInt(e.target.value) || 0;
                         setNewFaq({...newFaq, position: value});
                       }}
-                      className="bg-jf-gray/30 border-[#D946EF]/30 text-white"
+                      className="bg-black/60 backdrop-blur-sm border-white/10 text-white shadow-inner shadow-black/20 focus-visible:ring-[#D946EF]"
                     />
                   </div>
                   <div className="flex items-center space-x-2 pt-8">
@@ -331,12 +408,12 @@ const FAQManager = () => {
                       }
                       className="data-[state=checked]:bg-[#D946EF]"
                     />
-                    <Label htmlFor="is_active">Active</Label>
+                    <Label htmlFor="is_active" className="text-white">Active</Label>
                   </div>
                 </div>
               )}
               {editingFaq && (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 mt-2">
                   <Switch
                     id="is_active"
                     checked={editingFaq.is_active}
@@ -345,7 +422,7 @@ const FAQManager = () => {
                     }
                     className="data-[state=checked]:bg-[#D946EF]"
                   />
-                  <Label htmlFor="is_active">Active</Label>
+                  <Label htmlFor="is_active" className="text-white">Active</Label>
                 </div>
               )}
             </div>
@@ -356,10 +433,18 @@ const FAQManager = () => {
               </Button>
               <Button 
                 type="button" 
-                className="bg-[#D946EF] hover:bg-[#D946EF]/90"
+                className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white shadow-md shadow-[#D946EF]/20 hover:shadow-lg transition-all duration-200"
                 onClick={editingFaq ? handleEditFaq : handleAddFaq}
+                disabled={isSubmitting}
               >
-                {editingFaq ? "Update" : "Add"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {editingFaq ? "Updating..." : "Adding..."}
+                  </>
+                ) : (
+                  <>{editingFaq ? "Update FAQ" : "Add FAQ"}</>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -367,43 +452,73 @@ const FAQManager = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center my-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex justify-center items-center h-64 bg-black/20 backdrop-blur-sm rounded-lg border border-white/10">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-[#D946EF]" />
+            <p className="text-gray-400">Loading FAQs...</p>
+          </div>
         </div>
       ) : faqs.length === 0 ? (
-        <div className="text-center py-12 bg-black/20 rounded-lg border border-white/10">
-          <h3 className="text-xl font-medium mb-2">No FAQs Found</h3>
-          <p className="text-gray-500 mb-4">Add your first FAQ using the button above.</p>
+        <div className="text-center py-12 bg-black/20 backdrop-blur-sm rounded-lg border border-white/10">
+          <HelpCircle className="h-12 w-12 text-[#D946EF]/50 mx-auto mb-4" />
+          <h3 className="text-xl font-medium mb-2 text-white">No FAQs Found</h3>
+          <p className="text-gray-500 mb-6">Add your first FAQ using the button above.</p>
           <Button 
-            className="bg-[#D946EF] hover:bg-[#D946EF]/90"
+            className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white shadow-md shadow-[#D946EF]/20 hover:shadow-lg transition-all duration-200"
             onClick={() => {
               setEditingFaq(null);
               setDialogOpen(true);
             }}
           >
-            <Plus className="mr-2 h-4 w-4" /> Add FAQ
+            <Plus className="mr-2 h-4 w-4" /> Add First FAQ
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {faqs.map((faq) => (
-            <Card key={faq.id} className={!faq.is_active ? "opacity-60 border border-white/5 bg-black/20" : "border border-white/10 bg-black/20"}>
+        <div className="space-y-4">
+          {faqs.map((faq, index) => (
+            <Card key={faq.id} className={`border ${!faq.is_active ? "border-white/5 bg-black/40" : "border-white/10 bg-black/60"} backdrop-blur-sm hover:shadow-md hover:shadow-[#D946EF]/5 transition-all duration-300`}>
               <CardHeader className="pb-2">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg">{faq.question_en}</CardTitle>
-                    <CardDescription>Position: {faq.position}</CardDescription>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg text-white group-hover:text-white transition-colors">
+                        {faq.question_en}
+                      </CardTitle>
+                      {!faq.is_active && (
+                        <Badge variant="outline" className="bg-red-500/20 text-red-300 border-red-500/30 text-xs">
+                          Inactive
+                        </Badge>
+                      )}
+                    </div>
+                    <CardDescription className="mt-1 text-gray-400">
+                      Position: {faq.position}
+                    </CardDescription>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleMoveUp(index)}
+                      disabled={index === 0}
+                      className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#D946EF]/10"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleMoveDown(index)}
+                      disabled={index === faqs.length - 1}
+                      className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#D946EF]/10"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
                     <Switch
                       id={`active-${faq.id}`}
                       checked={faq.is_active}
                       onCheckedChange={() => handleToggleActive(faq.id, faq.is_active)}
                       className="data-[state=checked]:bg-[#D946EF]"
                     />
-                    <Label htmlFor={`active-${faq.id}`} className="sr-only">
-                      Active
-                    </Label>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -411,7 +526,7 @@ const FAQManager = () => {
                         setEditingFaq(faq);
                         setDialogOpen(true);
                       }}
-                      className="hover:bg-[#D946EF]/10 hover:text-[#D946EF]"
+                      className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#D946EF]/10"
                     >
                       <PenSquare className="h-4 w-4" />
                     </Button>
@@ -419,19 +534,25 @@ const FAQManager = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteFaq(faq.id)}
-                      className="hover:bg-[#D946EF]/10 hover:text-[#D946EF]"
+                      className="h-8 w-8 text-gray-400 hover:text-white hover:bg-red-500/20"
                     >
                       <Trash className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="mt-2 text-sm">
-                  <strong>IT:</strong> {faq.question_it}
-                </div>
-                <div className="mt-2 text-sm">
-                  <strong>EN:</strong> {faq.answer_en.length > 100 ? `${faq.answer_en.substring(0, 100)}...` : faq.answer_en}
+              <CardContent className="pt-1 pb-4">
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <p className="text-sm font-medium text-[#D946EF] mb-1">Italian:</p>
+                    <p className="text-sm text-gray-300">{faq.question_it}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[#D946EF] mb-1">Answer Preview:</p>
+                    <p className="text-sm text-gray-300 line-clamp-2">
+                      {faq.answer_en.length > 100 ? `${faq.answer_en.substring(0, 100)}...` : faq.answer_en}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
