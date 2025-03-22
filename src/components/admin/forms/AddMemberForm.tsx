@@ -2,46 +2,52 @@
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
+import { Plus, Award, User, Calendar, ListChecks, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
 const AddMemberForm = ({ onAddMember }) => {
-  const [name, setName] = useState("");
-  const [image, setImage] = useState("");
-  const [role, setRole] = useState("");
-  const [joinDate, setJoinDate] = useState("");
-  const [achievements, setAchievements] = useState("");
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      image: "",
+      role: "",
+      joinDate: "",
+      achievements: ""
+    }
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values) => {
+    setIsSubmitting(true);
     try {
-      const achievementsArray = achievements
+      const achievementsArray = values.achievements
         .split("\n")
         .map((a) => a.trim())
         .filter((a) => a);
 
       const { data, error } = await supabase.from("members").insert({
-        name,
-        image,
-        role,
-        join_date: joinDate,
+        name: values.name,
+        image: values.image,
+        role: values.role,
+        join_date: values.joinDate,
         achievements: achievementsArray,
       }).select();
 
       if (error) throw error;
 
       toast({
-        title: "Member added",
-        description: "The member has been added successfully",
+        title: "Membro aggiunto",
+        description: "Il membro è stato aggiunto con successo",
       });
 
-      setName("");
-      setImage("");
-      setRole("");
-      setJoinDate("");
-      setAchievements("");
+      form.reset();
 
       if (onAddMember && data) {
         onAddMember(data[0]);
@@ -49,10 +55,12 @@ const AddMemberForm = ({ onAddMember }) => {
     } catch (error) {
       console.error("Error adding member:", error);
       toast({
-        title: "Error adding member",
-        description: error.message || "There was a problem adding the member",
+        title: "Errore nell'aggiunta del membro",
+        description: error.message || "Si è verificato un problema durante l'aggiunta del membro",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -60,81 +68,129 @@ const AddMemberForm = ({ onAddMember }) => {
     <Card className="border border-white/10 bg-black/40 backdrop-blur-sm shadow-xl mb-8 overflow-hidden transition-all duration-300 hover:shadow-[#D946EF]/10">
       <CardHeader className="bg-gradient-to-r from-[#D946EF]/20 to-transparent border-b border-white/10 px-6 py-4">
         <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-          <Plus size={18} className="text-[#D946EF]" /> Add New Team Member
+          <Award size={18} className="text-[#D946EF]" /> Aggiungi Nuovo Membro
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="form-group">
-              <label className="form-label">Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                placeholder="Enter member name"
-                className="enhanced-input w-full"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                      <User size={14} className="text-[#D946EF]" /> Nome
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        required 
+                        placeholder="Inserisci nome del membro" 
+                        className="bg-black/60 border-white/10 text-white"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                      <Image size={14} className="text-[#D946EF]" /> URL Immagine
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        required 
+                        placeholder="Inserisci URL immagine" 
+                        className="bg-black/60 border-white/10 text-white"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
               />
             </div>
             
-            <div className="form-group">
-              <label className="form-label">Image URL</label>
-              <input
-                type="text"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                required
-                placeholder="Enter image URL"
-                className="enhanced-input w-full"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-300">
+                      Ruolo
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        required 
+                        placeholder="Inserisci ruolo" 
+                        className="bg-black/60 border-white/10 text-white"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="form-group">
-              <label className="form-label">Role</label>
-              <input
-                type="text"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                required
-                placeholder="Enter role"
-                className="enhanced-input w-full"
+              
+              <FormField
+                control={form.control}
+                name="joinDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                      <Calendar size={14} className="text-[#D946EF]" /> Data Ingresso
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="es. Settembre 2015" 
+                        className="bg-black/60 border-white/10 text-white"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
               />
             </div>
             
-            <div className="form-group">
-              <label className="form-label">Join Date</label>
-              <input
-                type="text"
-                value={joinDate}
-                onChange={(e) => setJoinDate(e.target.value)}
-                placeholder="e.g. September 2015"
-                className="enhanced-input w-full"
-              />
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Achievements (one per line)</label>
-            <textarea
-              className="enhanced-textarea w-full"
-              value={achievements}
-              onChange={(e) => setAchievements(e.target.value)}
-              placeholder="Enter each achievement on a new line"
-              required
+            <FormField
+              control={form.control}
+              name="achievements"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                    <ListChecks size={14} className="text-[#D946EF]" /> Risultati (uno per riga)
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      {...field} 
+                      required 
+                      placeholder="Inserisci ogni risultato su una nuova riga" 
+                      className="min-h-[120px] bg-black/60 border-white/10 text-white"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <Button 
-            type="submit" 
-            className="w-full bg-[#D946EF] hover:bg-[#D946EF]/90 text-white font-medium py-3 rounded-lg shadow-lg shadow-[#D946EF]/20 flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-xl hover:shadow-[#D946EF]/30"
-          >
-            <Plus size={18} />
-            <span>Add Member</span>
-          </Button>
-        </form>
+            
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full bg-[#D946EF] hover:bg-[#D946EF]/90 text-white font-medium py-3 rounded-lg shadow-lg shadow-[#D946EF]/20 flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-xl hover:shadow-[#D946EF]/30"
+            >
+              {isSubmitting ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+              ) : (
+                <Plus size={18} />
+              )}
+              <span>Aggiungi Membro</span>
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

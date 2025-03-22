@@ -45,22 +45,17 @@
   @apply text-sm text-gray-400;
 }
 
-.admin-form label {
+/* Admin Form Styles - Queste classi saranno sostituite da shadcn/ui */
+.admin-form-legacy label {
   @apply block text-sm font-medium mb-2 text-gray-300;
 }
 
-.admin-form input,
-.admin-form textarea,
-.admin-form select {
+.admin-form-legacy input,
+.admin-form-legacy textarea,
+.admin-form-legacy select {
   @apply w-full p-3 bg-black/60 border border-white/10 rounded-md text-white placeholder-gray-500 shadow-inner shadow-black/20
   focus:outline-none focus:ring-2 focus:ring-[#D946EF] focus:ring-opacity-50 focus:border-transparent
   hover:border-white/20 transition-all duration-200;
-}
-
-.admin-form input:focus,
-.admin-form textarea:focus,
-.admin-form select:focus {
-  box-shadow: 0 0 0 2px rgba(217, 70, 239, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .admin-tag {
@@ -155,26 +150,7 @@
   text-decoration: none;
 }
 
-/* Enhanced Input Fields */
-.enhanced-input {
-  @apply bg-black/60 border border-white/10 rounded-md px-4 py-3 text-white placeholder:text-gray-500 
-  focus:border-[#D946EF]/50 focus:ring-2 focus:ring-[#D946EF]/30 focus:outline-none transition-all duration-200
-  hover:border-white/20 shadow-inner shadow-black/20;
-}
-
-.enhanced-textarea {
-  @apply bg-black/60 border border-white/10 rounded-md px-4 py-3 text-white placeholder:text-gray-500 
-  focus:border-[#D946EF]/50 focus:ring-2 focus:ring-[#D946EF]/30 focus:outline-none transition-all duration-200
-  hover:border-white/20 min-h-[120px] resize-y shadow-inner shadow-black/20;
-}
-
-.admin-logout-button {
-  @apply flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/30 hover:bg-black/50 
-  border border-white/10 hover:border-white/20 text-white transition-all duration-200
-  text-sm font-medium;
-}
-
-/* Enhanced Form Styles */
+/* Form Styles */
 .form-group {
   @apply space-y-1.5 mb-4;
 }
@@ -187,3 +163,63 @@
   @apply text-xs text-gray-500 mt-1;
 }
 
+/* Enhanced Input Fields - Da usare solo come fallback */
+.enhanced-input {
+  @apply bg-black/60 border border-white/10 rounded-md px-4 py-3 text-white placeholder:text-gray-500 
+  focus:border-[#D946EF]/50 focus:ring-2 focus:ring-[#D946EF]/30 focus:outline-none transition-all duration-200
+  hover:border-white/20 shadow-inner shadow-black/20;
+}
+
+.enhanced-textarea {
+  @apply bg-black/60 border border-white/10 rounded-md px-4 py-3 text-white placeholder:text-gray-500 
+  focus:border-[#D946EF]/50 focus:ring-2 focus:ring-[#D946EF]/30 focus:outline-none transition-all duration-200
+  hover:border-white/20 min-h-[120px] resize-y shadow-inner shadow-black/20;
+}
+
+/* Nuovi stili per form moderni */
+.modern-form-container {
+  @apply rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm shadow-xl p-6;
+}
+
+.modern-form-title {
+  @apply text-xl font-bold text-white mb-6 pb-4 border-b border-white/10;
+}
+
+.modern-form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-5;
+}
+
+.modern-form-group {
+  @apply mb-5;
+}
+
+.modern-form-label {
+  @apply block text-sm font-medium text-gray-300 mb-1.5 flex items-center gap-1.5;
+}
+
+.modern-form-input {
+  @apply w-full h-10 px-4 py-2 rounded-md border border-white/10 bg-black/60 text-white placeholder:text-gray-500
+  focus:border-[#D946EF]/50 focus:ring-2 focus:ring-[#D946EF]/30 focus:outline-none 
+  transition-all duration-200 hover:border-white/20 shadow-inner shadow-black/20;
+}
+
+.modern-form-textarea {
+  @apply w-full min-h-[120px] px-4 py-3 rounded-md border border-white/10 bg-black/60 text-white placeholder:text-gray-500
+  focus:border-[#D946EF]/50 focus:ring-2 focus:ring-[#D946EF]/30 focus:outline-none
+  transition-all duration-200 hover:border-white/20 shadow-inner shadow-black/20 resize-y;
+}
+
+.modern-form-button {
+  @apply w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#D946EF] hover:bg-[#D946EF]/90 text-white
+  rounded-lg font-medium shadow-lg shadow-[#D946EF]/20 transition-all duration-200 
+  hover:shadow-xl hover:shadow-[#D946EF]/30;
+}
+
+.modern-form-error {
+  @apply text-red-400 text-xs mt-1;
+}
+
+/* Loader spinner */
+.spinner {
+  @apply animate-spin rounded-full border-t-2 border-b-2 border-white h-4 w-4 inline-block;
+}

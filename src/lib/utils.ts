@@ -33,7 +33,6 @@ export function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-// Admin utility functions
 export function formatTimestamp(timestamp: string): string {
   if (!timestamp) return '';
   
@@ -58,4 +57,38 @@ export function getStatusBadgeClass(status: string): string {
     default:
       return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
   }
+}
+
+// Funzioni di validazione form
+export function isValidUrl(string: string): boolean {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+export function isValidEmail(email: string): boolean {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+// Funzioni di manipolazione array per le interfacce admin
+export function moveItemUp<T>(array: T[], index: number): T[] {
+  if (index <= 0) return array;
+  const newArray = [...array];
+  const item = newArray[index];
+  newArray[index] = newArray[index - 1];
+  newArray[index - 1] = item;
+  return newArray;
+}
+
+export function moveItemDown<T>(array: T[], index: number): T[] {
+  if (index >= array.length - 1) return array;
+  const newArray = [...array];
+  const item = newArray[index];
+  newArray[index] = newArray[index + 1];
+  newArray[index + 1] = item;
+  return newArray;
 }
