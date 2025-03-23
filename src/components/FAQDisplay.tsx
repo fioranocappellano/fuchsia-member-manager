@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from "../contexts/LanguageContext";
@@ -9,7 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { motion } from "framer-motion";
-import { HelpCircle, Loader2 } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 
 interface FAQItem {
   id: string;
@@ -101,19 +102,7 @@ const FAQDisplay: React.FC<FAQDisplayProps> = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-4xl mx-auto flex justify-center items-center py-20"
-      >
-        <Loader2 className="h-8 w-8 animate-spin text-[#D946EF]" />
-      </motion.div>
-    );
-  }
-
+  // Removed the loading animation and directly show the FAQs
   if (error) {
     return (
       <motion.div 
