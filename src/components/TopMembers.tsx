@@ -47,7 +47,19 @@ const TopMembers = () => {
       }
       
       console.log("Fetched members from Supabase:", data?.length || 0);
-      setMembers(data || []);
+      // Map the data to ensure it conforms to MemberData interface
+      const typedMembers: MemberData[] = data?.map(item => ({
+        id: item.id,
+        name: item.name,
+        image: item.image,
+        role: item.role,
+        join_date: item.join_date || undefined,
+        achievements: item.achievements || [],
+        position: item.position || 0,
+        smogon: item.smogon || undefined
+      })) || [];
+      
+      setMembers(typedMembers);
       setLoading(false);
     } catch (err: any) {
       console.error("Error fetching members:", err);

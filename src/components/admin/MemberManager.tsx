@@ -11,10 +11,22 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { useForm } from "react-hook-form";
 import AddMemberForm from "./forms/AddMemberForm";
 
+// Define a type for the Member object that includes position
+interface Member {
+  id: string;
+  name: string;
+  image: string;
+  role: string;
+  join_date?: string;
+  achievements: string[];
+  position: number;
+  smogon?: string;
+}
+
 const MemberManager = () => {
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingMember, setEditingMember] = useState(null);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [reordering, setReordering] = useState(false);
   const { toast } = useToast();
   
@@ -97,12 +109,12 @@ const MemberManager = () => {
   };
 
   const handleUpdate = async (values) => {
-    try {
-      const achievementsArray = values.achievements
-        .split("\n")
-        .map((a) => a.trim())
-        .filter((a) => a);
+    const achievementsArray = values.achievements
+      .split("\n")
+      .map((a) => a.trim())
+      .filter((a) => a);
 
+    try {
       const { data, error } = await supabase
         .from('members')
         .update({
@@ -112,8 +124,8 @@ const MemberManager = () => {
           join_date: values.joinDate,
           achievements: achievementsArray,
           smogon: values.smogon || null,
-          // Keep the existing position
-          position: editingMember.position
+          // Only include position if editingMember exists
+          ...(editingMember && { position: editingMember.position })
         })
         .eq('id', editingMember.id)
         .select();
@@ -167,18 +179,34 @@ const MemberManager = () => {
       member1.position = member2.position;
       member2.position = tempPosition;
       
-      // Update the first member
+      // Update the first member - update complete member object including position
       const { error: error1 } = await supabase
         .from('members')
-        .update({ position: member1.position })
+        .update({ 
+          name: member1.name,
+          image: member1.image,
+          role: member1.role,
+          join_date: member1.join_date,
+          achievements: member1.achievements,
+          position: member1.position,
+          smogon: member1.smogon
+        })
         .eq('id', member1.id);
         
       if (error1) throw error1;
       
-      // Update the second member
+      // Update the second member - update complete member object including position
       const { error: error2 } = await supabase
         .from('members')
-        .update({ position: member2.position })
+        .update({ 
+          name: member2.name,
+          image: member2.image,
+          role: member2.role,
+          join_date: member2.join_date,
+          achievements: member2.achievements,
+          position: member2.position,
+          smogon: member2.smogon
+        })
         .eq('id', member2.id);
         
       if (error2) throw error2;

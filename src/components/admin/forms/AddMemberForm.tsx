@@ -40,7 +40,7 @@ const AddMemberForm = ({ onAddMember }) => {
       if (fetchError) throw fetchError;
       
       // Calculate the new position (either 1 higher than the highest, or 1 if no records)
-      const newPosition = existingMembers && existingMembers.length > 0 
+      const newPosition = existingMembers && existingMembers.length > 0 && existingMembers[0].position !== null
         ? (existingMembers[0].position + 1) 
         : 1;
 

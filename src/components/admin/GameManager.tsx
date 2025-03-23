@@ -10,10 +10,24 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { useForm } from "react-hook-form";
 import AddGameForm from "./forms/AddGameForm";
 
+// Define a type for the Game object that includes position
+interface Game {
+  id: string;
+  format: string;
+  phase: string;
+  tournament: string;
+  image_url: string;
+  replay_url: string;
+  players: string;
+  description_en: string;
+  description_it: string;
+  position: number;
+}
+
 const GameManager = () => {
-  const [games, setGames] = useState([]);
+  const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingGame, setEditingGame] = useState(null);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [reordering, setReordering] = useState(false);
   const { toast } = useToast();
   
@@ -112,8 +126,8 @@ const GameManager = () => {
           players: values.players,
           description_en: values.descriptionEn,
           description_it: values.descriptionIt,
-          // Keep the existing position
-          position: editingGame.position
+          // Only include position if editingGame exists
+          ...(editingGame && { position: editingGame.position })
         })
         .eq('id', editingGame.id)
         .select();
@@ -167,18 +181,38 @@ const GameManager = () => {
       game1.position = game2.position;
       game2.position = tempPosition;
       
-      // Update the first game
+      // Update the first game - update complete game object including position
       const { error: error1 } = await supabase
         .from('best_games')
-        .update({ position: game1.position })
+        .update({ 
+          format: game1.format,
+          phase: game1.phase,
+          tournament: game1.tournament,
+          image_url: game1.image_url,
+          replay_url: game1.replay_url,
+          players: game1.players,
+          description_en: game1.description_en,
+          description_it: game1.description_it,
+          position: game1.position
+        })
         .eq('id', game1.id);
         
       if (error1) throw error1;
       
-      // Update the second game
+      // Update the second game - update complete game object including position
       const { error: error2 } = await supabase
         .from('best_games')
-        .update({ position: game2.position })
+        .update({ 
+          format: game2.format,
+          phase: game2.phase,
+          tournament: game2.tournament,
+          image_url: game2.image_url,
+          replay_url: game2.replay_url,
+          players: game2.players,
+          description_en: game2.description_en,
+          description_it: game2.description_it,
+          position: game2.position
+        })
         .eq('id', game2.id);
         
       if (error2) throw error2;
