@@ -32,10 +32,10 @@ const MemberManager = () => {
   const fetchMembers = async () => {
     try {
       setLoading(true);
+      // Use only id-based ordering for now until position field is added to DB
       const { data, error } = await supabase
         .from('members')
         .select('*')
-        .order('position', { ascending: true })
         .order('id', { ascending: true });
 
       if (error) throw error;
@@ -152,24 +152,46 @@ const MemberManager = () => {
 
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     const newMembers = [...members];
-    const targetItem = newMembers[currentIndex];
-    const swapItem = newMembers[newIndex];
-
-    // Swap positions
+    
+    // Just swap the array positions for now
+    [newMembers[currentIndex], newMembers[newIndex]] = [newMembers[newIndex], newMembers[currentIndex]];
+    
     try {
-      const updates = [
-        { id: targetItem.id, position: swapItem.position || newIndex },
-        { id: swapItem.id, position: targetItem.position || currentIndex }
-      ];
-
-      const { error } = await supabase
+      // Get the complete data for both members
+      const member1 = members[currentIndex];
+      const member2 = members[newIndex];
+      
+      // Update the first member
+      const { error: error1 } = await supabase
         .from('members')
-        .upsert(updates);
-
-      if (error) throw error;
+        .update({
+          name: member1.name,
+          image: member1.image,
+          role: member1.role,
+          join_date: member1.join_date,
+          achievements: member1.achievements,
+          // Add position if/when you add it to your database
+        })
+        .eq('id', member1.id);
+        
+      if (error1) throw error1;
+      
+      // Update the second member
+      const { error: error2 } = await supabase
+        .from('members')
+        .update({
+          name: member2.name,
+          image: member2.image,
+          role: member2.role,
+          join_date: member2.join_date,
+          achievements: member2.achievements,
+          // Add position if/when you add it to your database
+        })
+        .eq('id', member2.id);
+        
+      if (error2) throw error2;
 
       // Update local state for immediate UI update
-      [newMembers[currentIndex], newMembers[newIndex]] = [newMembers[newIndex], newMembers[currentIndex]];
       setMembers(newMembers);
     } catch (error) {
       console.error("Error updating position:", error);

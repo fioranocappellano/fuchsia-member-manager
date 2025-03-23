@@ -34,10 +34,10 @@ const GameManager = () => {
   const fetchGames = async () => {
     try {
       setLoading(true);
+      // Use only id-based ordering for now until position field is added to DB
       const { data, error } = await supabase
         .from('best_games')
         .select('*')
-        .order('position', { ascending: true })
         .order('id', { ascending: false });
 
       if (error) throw error;
@@ -155,24 +155,52 @@ const GameManager = () => {
 
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     const newGames = [...games];
-    const targetItem = newGames[currentIndex];
-    const swapItem = newGames[newIndex];
-
-    // Swap positions
+    
+    // Just swap the array positions for now
+    [newGames[currentIndex], newGames[newIndex]] = [newGames[newIndex], newGames[currentIndex]];
+    
     try {
-      const updates = [
-        { id: targetItem.id, position: swapItem.position || newIndex },
-        { id: swapItem.id, position: targetItem.position || currentIndex }
-      ];
-
-      const { error } = await supabase
+      // Get the complete data for both games
+      const game1 = games[currentIndex];
+      const game2 = games[newIndex];
+      
+      // Update the first game
+      const { error: error1 } = await supabase
         .from('best_games')
-        .upsert(updates);
-
-      if (error) throw error;
+        .update({
+          format: game1.format,
+          phase: game1.phase,
+          tournament: game1.tournament,
+          image_url: game1.image_url,
+          replay_url: game1.replay_url,
+          players: game1.players,
+          description_en: game1.description_en,
+          description_it: game1.description_it,
+          // Add position if/when you add it to your database
+        })
+        .eq('id', game1.id);
+        
+      if (error1) throw error1;
+      
+      // Update the second game
+      const { error: error2 } = await supabase
+        .from('best_games')
+        .update({
+          format: game2.format,
+          phase: game2.phase,
+          tournament: game2.tournament,
+          image_url: game2.image_url,
+          replay_url: game2.replay_url,
+          players: game2.players,
+          description_en: game2.description_en,
+          description_it: game2.description_it,
+          // Add position if/when you add it to your database
+        })
+        .eq('id', game2.id);
+        
+      if (error2) throw error2;
 
       // Update local state for immediate UI update
-      [newGames[currentIndex], newGames[newIndex]] = [newGames[newIndex], newGames[currentIndex]];
       setGames(newGames);
     } catch (error) {
       console.error("Error updating position:", error);
