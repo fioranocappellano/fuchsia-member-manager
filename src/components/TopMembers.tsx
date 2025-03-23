@@ -39,7 +39,7 @@ const TopMembers = () => {
       const { data, error } = await supabase
         .from('members')
         .select('*')
-        .order('position', { ascending: true }) // Now order by position
+        .order('position', { ascending: true })
         .throwOnError();
       
       if (error) {

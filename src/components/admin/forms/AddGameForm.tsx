@@ -42,8 +42,8 @@ const AddGameForm = ({ onAddGame }) => {
       if (fetchError) throw fetchError;
       
       // Calculate the new position (either 1 higher than the highest, or 1 if no records)
-      const newPosition = existingGames && existingGames.length > 0 && existingGames[0].position !== null
-        ? (existingGames[0].position + 1) 
+      const newPosition = existingGames && existingGames.length > 0 
+        ? (existingGames[0]?.position ? existingGames[0].position + 1 : 1) 
         : 1;
 
       const { data, error } = await supabase.from("best_games").insert({

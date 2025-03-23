@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -54,7 +55,22 @@ const GameManager = () => {
         .order('position', { ascending: true });
 
       if (error) throw error;
-      setGames(data || []);
+      
+      // Map data to ensure it conforms to Game interface
+      const typedGames: Game[] = data?.map(item => ({
+        id: item.id,
+        format: item.format,
+        phase: item.phase,
+        tournament: item.tournament,
+        image_url: item.image_url,
+        replay_url: item.replay_url,
+        players: item.players,
+        description_en: item.description_en,
+        description_it: item.description_it,
+        position: item.position || 0
+      })) || [];
+      
+      setGames(typedGames);
     } catch (error) {
       console.error("Error fetching games:", error);
       toast({
@@ -139,7 +155,21 @@ const GameManager = () => {
         description: "The game has been updated successfully",
       });
 
-      setGames(games.map(g => g.id === editingGame.id ? data[0] : g));
+      // Convert the response to match the Game interface
+      const updatedGame: Game = {
+        id: data[0].id,
+        format: data[0].format,
+        phase: data[0].phase,
+        tournament: data[0].tournament,
+        image_url: data[0].image_url,
+        replay_url: data[0].replay_url,
+        players: data[0].players,
+        description_en: data[0].description_en,
+        description_it: data[0].description_it,
+        position: data[0].position || 0
+      };
+
+      setGames(games.map(g => g.id === editingGame.id ? updatedGame : g));
       setEditingGame(null);
     } catch (error) {
       console.error("Error updating game:", error);

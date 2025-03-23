@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -51,7 +52,20 @@ const MemberManager = () => {
         .order('position', { ascending: true });
 
       if (error) throw error;
-      setMembers(data || []);
+      
+      // Map data to ensure it conforms to Member interface
+      const typedMembers: Member[] = data?.map(item => ({
+        id: item.id,
+        name: item.name,
+        image: item.image,
+        role: item.role,
+        join_date: item.join_date || undefined,
+        achievements: item.achievements || [],
+        position: item.position || 0,
+        smogon: item.smogon || undefined
+      })) || [];
+      
+      setMembers(typedMembers);
     } catch (error) {
       console.error("Error fetching members:", error);
       toast({
@@ -137,7 +151,19 @@ const MemberManager = () => {
         description: "The member has been updated successfully",
       });
 
-      setMembers(members.map(m => m.id === editingMember.id ? data[0] : m));
+      // Convert the response to match the Member interface
+      const updatedMember: Member = {
+        id: data[0].id,
+        name: data[0].name,
+        image: data[0].image,
+        role: data[0].role,
+        join_date: data[0].join_date || undefined,
+        achievements: data[0].achievements,
+        position: data[0].position || 0,
+        smogon: data[0].smogon || undefined
+      };
+
+      setMembers(members.map(m => m.id === editingMember.id ? updatedMember : m));
       setEditingMember(null);
     } catch (error) {
       console.error("Error updating member:", error);
