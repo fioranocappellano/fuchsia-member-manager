@@ -18,6 +18,8 @@ interface MemberData {
   role: string;
   join_date?: string;
   achievements: string[];
+  position: number;
+  smogon?: string;
 }
 
 const TopMembers = () => {
@@ -37,7 +39,7 @@ const TopMembers = () => {
       const { data, error } = await supabase
         .from('members')
         .select('*')
-        .order('id', { ascending: true }) // Order by id to maintain consistent ordering
+        .order('position', { ascending: true }) // Now order by position
         .throwOnError();
       
       if (error) {
@@ -206,6 +208,7 @@ const TopMembers = () => {
                 role={member.role}
                 achievements={member.achievements}
                 joinDate={member.join_date}
+                smogon={member.smogon}
                 index={index}
               />
             </motion.div>

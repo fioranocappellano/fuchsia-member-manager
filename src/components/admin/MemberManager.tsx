@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Award, Edit, Plus, Save, Trash2, X, User, Calendar, ListChecks, Image, ArrowUp, ArrowDown } from "lucide-react";
+import { Award, Edit, Plus, Save, Trash2, X, User, Calendar, ListChecks, Image, ArrowUp, ArrowDown, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -25,18 +24,19 @@ const MemberManager = () => {
       image: "",
       role: "",
       joinDate: "",
-      achievements: ""
+      achievements: "",
+      smogon: ""
     }
   });
 
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      // Use only id-based ordering for now until position field is added to DB
+      // Now use position field for ordering
       const { data, error } = await supabase
         .from('members')
         .select('*')
-        .order('id', { ascending: true });
+        .order('position', { ascending: true });
 
       if (error) throw error;
       setMembers(data || []);
@@ -63,7 +63,8 @@ const MemberManager = () => {
       image: member.image,
       role: member.role,
       joinDate: member.join_date || "",
-      achievements: member.achievements.join("\n")
+      achievements: member.achievements.join("\n"),
+      smogon: member.smogon || ""
     });
   };
 
@@ -82,7 +83,8 @@ const MemberManager = () => {
           description: "The member has been deleted successfully",
         });
 
-        setMembers(members.filter(member => member.id !== id));
+        // Refresh the list after deletion
+        fetchMembers();
       } catch (error) {
         console.error("Error deleting member:", error);
         toast({
@@ -109,6 +111,9 @@ const MemberManager = () => {
           role: values.role,
           join_date: values.joinDate,
           achievements: achievementsArray,
+          smogon: values.smogon || null,
+          // Keep the existing position
+          position: editingMember.position
         })
         .eq('id', editingMember.id)
         .select();
@@ -133,7 +138,7 @@ const MemberManager = () => {
   };
 
   const handleAddMember = (newMember) => {
-    setMembers([...members, newMember]);
+    // Refresh all members to get the correct order
     fetchMembers();
   };
 
@@ -142,36 +147,30 @@ const MemberManager = () => {
   };
 
   const moveItem = async (id, direction) => {
-    const currentIndex = members.findIndex(member => member.id === id);
-    if (
-      (direction === 'up' && currentIndex === 0) || 
-      (direction === 'down' && currentIndex === members.length - 1)
-    ) {
-      return;
-    }
-
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    const newMembers = [...members];
-    
-    // Just swap the array positions for now
-    [newMembers[currentIndex], newMembers[newIndex]] = [newMembers[newIndex], newMembers[currentIndex]];
-    
     try {
-      // Get the complete data for both members
+      const currentIndex = members.findIndex(member => member.id === id);
+      if (
+        (direction === 'up' && currentIndex === 0) || 
+        (direction === 'down' && currentIndex === members.length - 1)
+      ) {
+        return;
+      }
+
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      
+      // Get the two members we're swapping
       const member1 = members[currentIndex];
       const member2 = members[newIndex];
+      
+      // Swap their positions
+      const tempPosition = member1.position;
+      member1.position = member2.position;
+      member2.position = tempPosition;
       
       // Update the first member
       const { error: error1 } = await supabase
         .from('members')
-        .update({
-          name: member1.name,
-          image: member1.image,
-          role: member1.role,
-          join_date: member1.join_date,
-          achievements: member1.achievements,
-          // Add position if/when you add it to your database
-        })
+        .update({ position: member1.position })
         .eq('id', member1.id);
         
       if (error1) throw error1;
@@ -179,20 +178,14 @@ const MemberManager = () => {
       // Update the second member
       const { error: error2 } = await supabase
         .from('members')
-        .update({
-          name: member2.name,
-          image: member2.image,
-          role: member2.role,
-          join_date: member2.join_date,
-          achievements: member2.achievements,
-          // Add position if/when you add it to your database
-        })
+        .update({ position: member2.position })
         .eq('id', member2.id);
         
       if (error2) throw error2;
 
-      // Update local state for immediate UI update
-      setMembers(newMembers);
+      // Refresh the members to get the updated order
+      fetchMembers();
+      
     } catch (error) {
       console.error("Error updating position:", error);
       toast({
@@ -217,16 +210,13 @@ const MemberManager = () => {
           >
             {reordering ? 'Done Reordering' : 'Reorder Members'}
           </Button>
-          <Button className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white">
-            <Plus size={18} className="mr-2" /> Add Member
-          </Button>
         </div>
       </div>
       
       {!reordering && <AddMemberForm onAddMember={handleAddMember} />}
       
       <h2 className="text-xl font-bold mb-4 text-white/90 mt-8">
-        {reordering ? 'Drag or use arrows to reorder members' : 'Current Team Members'}
+        {reordering ? 'Use arrows to reorder members' : 'Current Team Members'}
       </h2>
 
       {loading ? (
@@ -362,6 +352,25 @@ const MemberManager = () => {
                             
                             <FormField
                               control={editForm.control}
+                              name="smogon"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                                    <Link size={14} className="text-[#D946EF]" /> URL Profilo Smogon
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      {...field} 
+                                      placeholder="Link al profilo Smogon (opzionale)" 
+                                      className="bg-black/60 border-white/10 text-white"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={editForm.control}
                               name="achievements"
                               render={({ field }) => (
                                 <FormItem>
@@ -403,7 +412,7 @@ const MemberManager = () => {
                       <div>
                         {reordering && (
                           <div className="mb-3 inline-block bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded text-xs font-medium">
-                            Position: {members.indexOf(member) + 1}
+                            Position: {member.position}
                           </div>
                         )}
                         <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
@@ -415,6 +424,13 @@ const MemberManager = () => {
                             <li key={idx} className="text-gray-300">• {achievement}</li>
                           ))}
                         </ul>
+                        {member.smogon && (
+                          <p className="text-xs text-blue-400 mt-2">
+                            <a href={member.smogon} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
+                              <Link size={12} /> Smogon Profile
+                            </a>
+                          </p>
+                        )}
                         {!reordering && (
                           <div className="flex space-x-2 mt-4">
                             <Button 

@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Gamepad2, Plus, Save, Trash2, X, Link2, Image, Users, Info, ArrowUp, ArrowDown } from "lucide-react";
+import { Edit, Gamepad2, Save, Trash2, X, Link2, Image, Users, Info, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,11 +33,11 @@ const GameManager = () => {
   const fetchGames = async () => {
     try {
       setLoading(true);
-      // Use only id-based ordering for now until position field is added to DB
+      // Now use position field for ordering
       const { data, error } = await supabase
         .from('best_games')
         .select('*')
-        .order('id', { ascending: false });
+        .order('position', { ascending: true });
 
       if (error) throw error;
       setGames(data || []);
@@ -87,7 +86,8 @@ const GameManager = () => {
           description: "The game has been deleted successfully",
         });
 
-        setGames(games.filter(game => game.id !== id));
+        // Refresh the list after deletion
+        fetchGames();
       } catch (error) {
         console.error("Error deleting game:", error);
         toast({
@@ -112,6 +112,8 @@ const GameManager = () => {
           players: values.players,
           description_en: values.descriptionEn,
           description_it: values.descriptionIt,
+          // Keep the existing position
+          position: editingGame.position
         })
         .eq('id', editingGame.id)
         .select();
@@ -136,7 +138,7 @@ const GameManager = () => {
   };
 
   const handleAddGame = (newGame) => {
-    setGames([newGame, ...games]);
+    // Refresh all games to get the correct order
     fetchGames();
   };
 
@@ -145,39 +147,30 @@ const GameManager = () => {
   };
 
   const moveItem = async (id, direction) => {
-    const currentIndex = games.findIndex(game => game.id === id);
-    if (
-      (direction === 'up' && currentIndex === 0) || 
-      (direction === 'down' && currentIndex === games.length - 1)
-    ) {
-      return;
-    }
-
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    const newGames = [...games];
-    
-    // Just swap the array positions for now
-    [newGames[currentIndex], newGames[newIndex]] = [newGames[newIndex], newGames[currentIndex]];
-    
     try {
-      // Get the complete data for both games
+      const currentIndex = games.findIndex(game => game.id === id);
+      if (
+        (direction === 'up' && currentIndex === 0) || 
+        (direction === 'down' && currentIndex === games.length - 1)
+      ) {
+        return;
+      }
+
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      
+      // Get the two games we're swapping
       const game1 = games[currentIndex];
       const game2 = games[newIndex];
+      
+      // Swap their positions
+      const tempPosition = game1.position;
+      game1.position = game2.position;
+      game2.position = tempPosition;
       
       // Update the first game
       const { error: error1 } = await supabase
         .from('best_games')
-        .update({
-          format: game1.format,
-          phase: game1.phase,
-          tournament: game1.tournament,
-          image_url: game1.image_url,
-          replay_url: game1.replay_url,
-          players: game1.players,
-          description_en: game1.description_en,
-          description_it: game1.description_it,
-          // Add position if/when you add it to your database
-        })
+        .update({ position: game1.position })
         .eq('id', game1.id);
         
       if (error1) throw error1;
@@ -185,23 +178,14 @@ const GameManager = () => {
       // Update the second game
       const { error: error2 } = await supabase
         .from('best_games')
-        .update({
-          format: game2.format,
-          phase: game2.phase,
-          tournament: game2.tournament,
-          image_url: game2.image_url,
-          replay_url: game2.replay_url,
-          players: game2.players,
-          description_en: game2.description_en,
-          description_it: game2.description_it,
-          // Add position if/when you add it to your database
-        })
+        .update({ position: game2.position })
         .eq('id', game2.id);
         
       if (error2) throw error2;
 
-      // Update local state for immediate UI update
-      setGames(newGames);
+      // Refresh the games to get the updated order
+      fetchGames();
+      
     } catch (error) {
       console.error("Error updating position:", error);
       toast({
@@ -226,16 +210,13 @@ const GameManager = () => {
           >
             {reordering ? 'Done Reordering' : 'Reorder Games'}
           </Button>
-          <Button className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white">
-            <Plus size={18} /> Add Game
-          </Button>
         </div>
       </div>
       
       {!reordering && <AddGameForm onAddGame={handleAddGame} />}
       
       <h2 className="text-xl font-bold mb-4 text-white/90">
-        {reordering ? 'Drag or use arrows to reorder games' : 'Current Best Games'}
+        {reordering ? 'Use arrows to reorder games' : 'Current Best Games'}
       </h2>
 
       {loading ? (
@@ -469,7 +450,7 @@ const GameManager = () => {
                       <div>
                         {reordering && (
                           <div className="mb-3 inline-block bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded text-xs font-medium">
-                            Position: {games.indexOf(game) + 1}
+                            Position: {game.position}
                           </div>
                         )}
                         <div className="flex flex-wrap gap-2 mb-2">
