@@ -2,22 +2,31 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Award, Edit, Plus, Save, Trash2, X } from "lucide-react";
+import { Award, Edit, Plus, Save, Trash2, X, User, Calendar, ListChecks, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 import AddMemberForm from "./forms/AddMemberForm";
 
 const MemberManager = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingMember, setEditingMember] = useState(null);
-  const [editName, setEditName] = useState("");
-  const [editImage, setEditImage] = useState("");
-  const [editRole, setEditRole] = useState("");
-  const [editJoinDate, setEditJoinDate] = useState("");
-  const [editAchievements, setEditAchievements] = useState("");
   const { toast } = useToast();
+  
+  const editForm = useForm({
+    defaultValues: {
+      name: "",
+      image: "",
+      role: "",
+      joinDate: "",
+      achievements: ""
+    }
+  });
 
   const fetchMembers = async () => {
     try {
@@ -47,11 +56,13 @@ const MemberManager = () => {
 
   const handleEdit = (member) => {
     setEditingMember(member);
-    setEditName(member.name);
-    setEditImage(member.image);
-    setEditRole(member.role);
-    setEditJoinDate(member.join_date || "");
-    setEditAchievements(member.achievements.join("\n"));
+    editForm.reset({
+      name: member.name,
+      image: member.image,
+      role: member.role,
+      joinDate: member.join_date || "",
+      achievements: member.achievements.join("\n")
+    });
   };
 
   const handleDelete = async (id) => {
@@ -81,9 +92,9 @@ const MemberManager = () => {
     }
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (values) => {
     try {
-      const achievementsArray = editAchievements
+      const achievementsArray = values.achievements
         .split("\n")
         .map((a) => a.trim())
         .filter((a) => a);
@@ -91,10 +102,10 @@ const MemberManager = () => {
       const { data, error } = await supabase
         .from('members')
         .update({
-          name: editName,
-          image: editImage,
-          role: editRole,
-          join_date: editJoinDate,
+          name: values.name,
+          image: values.image,
+          role: values.role,
+          join_date: values.joinDate,
           achievements: achievementsArray,
         })
         .eq('id', editingMember.id)
@@ -163,62 +174,129 @@ const MemberManager = () => {
                   <div className="w-full md:w-3/4">
                     {editingMember && editingMember.id === member.id ? (
                       <div className="space-y-4">
-                        <div className="form-group">
-                          <label className="form-label">Name</label>
-                          <input
-                            type="text"
-                            className="enhanced-input"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Image URL</label>
-                          <input
-                            type="text"
-                            className="enhanced-input"
-                            value={editImage}
-                            onChange={(e) => setEditImage(e.target.value)}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Role</label>
-                          <input
-                            type="text"
-                            className="enhanced-input"
-                            value={editRole}
-                            onChange={(e) => setEditRole(e.target.value)}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Join Date</label>
-                          <input
-                            type="text"
-                            className="enhanced-input"
-                            value={editJoinDate}
-                            onChange={(e) => setEditJoinDate(e.target.value)}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Achievements (one per line)</label>
-                          <textarea
-                            className="enhanced-textarea"
-                            value={editAchievements}
-                            onChange={(e) => setEditAchievements(e.target.value)}
-                          />
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button onClick={handleUpdate} className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white">
-                            <Save size={16} className="mr-1.5" /> Save Changes
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setEditingMember(null)}
-                            className="border-white/10 hover:bg-white/5 text-white"
-                          >
-                            <X size={16} className="mr-1.5" /> Cancel
-                          </Button>
-                        </div>
+                        <Form {...editForm}>
+                          <form onSubmit={editForm.handleSubmit(handleUpdate)} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={editForm.control}
+                                name="name"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                                      <User size={14} className="text-[#D946EF]" /> Nome
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        {...field} 
+                                        required 
+                                        placeholder="Inserisci nome del membro" 
+                                        className="bg-black/60 border-white/10 text-white"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={editForm.control}
+                                name="image"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                                      <Image size={14} className="text-[#D946EF]" /> URL Immagine
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        {...field} 
+                                        required 
+                                        placeholder="Inserisci URL immagine" 
+                                        className="bg-black/60 border-white/10 text-white"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={editForm.control}
+                                name="role"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-300">
+                                      Ruolo
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        {...field} 
+                                        required 
+                                        placeholder="Inserisci ruolo" 
+                                        className="bg-black/60 border-white/10 text-white"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={editForm.control}
+                                name="joinDate"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                                      <Calendar size={14} className="text-[#D946EF]" /> Data Ingresso
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        {...field} 
+                                        placeholder="es. Settembre 2015" 
+                                        className="bg-black/60 border-white/10 text-white"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            
+                            <FormField
+                              control={editForm.control}
+                              name="achievements"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                                    <ListChecks size={14} className="text-[#D946EF]" /> Risultati (uno per riga)
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      {...field} 
+                                      required 
+                                      placeholder="Inserisci ogni risultato su una nuova riga" 
+                                      className="min-h-[120px] bg-black/60 border-white/10 text-white"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div className="flex space-x-2 pt-2">
+                              <Button 
+                                type="submit" 
+                                className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white flex items-center gap-2"
+                              >
+                                <Save size={16} /> Salva Modifiche
+                              </Button>
+                              <Button 
+                                type="button"
+                                variant="outline" 
+                                onClick={() => setEditingMember(null)}
+                                className="border-white/10 bg-black/20 hover:bg-white/5 text-white flex items-center gap-2"
+                              >
+                                <X size={16} /> Annulla
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
                       </div>
                     ) : (
                       <div>

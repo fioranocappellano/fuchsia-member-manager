@@ -115,9 +115,9 @@ const Admin = () => {
               <Button 
                 variant="outline" 
                 onClick={handleLogout}
-                className="admin-logout-button"
+                className="bg-black/30 text-white border-white/10 hover:bg-black/50 hover:border-white/20"
               >
-                <LogOut size={16} /> Logout
+                <LogOut size={16} className="mr-2" /> Logout
               </Button>
               <Button 
                 variant="outline" 

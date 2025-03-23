@@ -2,24 +2,33 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Gamepad2, Plus, Save, Trash2, X } from "lucide-react";
+import { Edit, Gamepad2, Plus, Save, Trash2, X, Link2, Image, Users, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 import AddGameForm from "./forms/AddGameForm";
 
 const GameManager = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingGame, setEditingGame] = useState(null);
-  const [editFormat, setEditFormat] = useState("");
-  const [editPhase, setEditPhase] = useState("");
-  const [editTournament, setEditTournament] = useState("");
-  const [editImageUrl, setEditImageUrl] = useState("");
-  const [editReplayUrl, setEditReplayUrl] = useState("");
-  const [editPlayers, setEditPlayers] = useState("");
-  const [editDescriptionEn, setEditDescriptionEn] = useState("");
-  const [editDescriptionIt, setEditDescriptionIt] = useState("");
   const { toast } = useToast();
+  
+  const editForm = useForm({
+    defaultValues: {
+      format: "",
+      phase: "",
+      tournament: "",
+      imageUrl: "",
+      replayUrl: "",
+      players: "",
+      descriptionEn: "",
+      descriptionIt: ""
+    }
+  });
 
   const fetchGames = async () => {
     try {
@@ -49,14 +58,16 @@ const GameManager = () => {
 
   const handleEdit = (game) => {
     setEditingGame(game);
-    setEditFormat(game.format);
-    setEditPhase(game.phase);
-    setEditTournament(game.tournament);
-    setEditImageUrl(game.image_url);
-    setEditReplayUrl(game.replay_url);
-    setEditPlayers(game.players);
-    setEditDescriptionEn(game.description_en);
-    setEditDescriptionIt(game.description_it);
+    editForm.reset({
+      format: game.format,
+      phase: game.phase,
+      tournament: game.tournament,
+      imageUrl: game.image_url,
+      replayUrl: game.replay_url,
+      players: game.players,
+      descriptionEn: game.description_en,
+      descriptionIt: game.description_it
+    });
   };
 
   const handleDelete = async (id) => {
@@ -86,19 +97,19 @@ const GameManager = () => {
     }
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (values) => {
     try {
       const { data, error } = await supabase
         .from('best_games')
         .update({
-          format: editFormat,
-          phase: editPhase,
-          tournament: editTournament,
-          image_url: editImageUrl,
-          replay_url: editReplayUrl,
-          players: editPlayers,
-          description_en: editDescriptionEn,
-          description_it: editDescriptionIt,
+          format: values.format,
+          phase: values.phase,
+          tournament: values.tournament,
+          image_url: values.imageUrl,
+          replay_url: values.replayUrl,
+          players: values.players,
+          description_en: values.descriptionEn,
+          description_it: values.descriptionIt,
         })
         .eq('id', editingGame.id)
         .select();
@@ -149,7 +160,7 @@ const GameManager = () => {
       ) : (
         <div className="space-y-6">
           {games.map((game) => (
-            <Card key={game.id} className="border border-white/10 bg-black/40 backdrop-blur-sm">
+            <Card key={game.id} className="border border-white/10 bg-black/40 backdrop-blur-sm hover:shadow-lg hover:shadow-[#D946EF]/5 transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="w-full md:w-1/3">
@@ -162,92 +173,190 @@ const GameManager = () => {
                   <div className="w-full md:w-2/3">
                     {editingGame && editingGame.id === game.id ? (
                       <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="form-label">Format</label>
-                            <input
-                              type="text"
-                              className="enhanced-input"
-                              value={editFormat}
-                              onChange={(e) => setEditFormat(e.target.value)}
+                        <Form {...editForm}>
+                          <form onSubmit={editForm.handleSubmit(handleUpdate)} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={editForm.control}
+                                name="format"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-300">
+                                      Formato
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        {...field} 
+                                        required 
+                                        placeholder="es. VGC 2023" 
+                                        className="bg-black/60 border-white/10 text-white"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={editForm.control}
+                                name="phase"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-300">
+                                      Fase
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        {...field} 
+                                        required 
+                                        placeholder="es. Finali" 
+                                        className="bg-black/60 border-white/10 text-white"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            
+                            <FormField
+                              control={editForm.control}
+                              name="tournament"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                                    <Info size={14} className="text-[#D946EF]" /> Torneo
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      {...field} 
+                                      required 
+                                      placeholder="Nome del torneo" 
+                                      className="bg-black/60 border-white/10 text-white"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
                             />
-                          </div>
-                          <div>
-                            <label className="form-label">Phase</label>
-                            <input
-                              type="text"
-                              className="enhanced-input"
-                              value={editPhase}
-                              onChange={(e) => setEditPhase(e.target.value)}
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={editForm.control}
+                                name="imageUrl"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                                      <Image size={14} className="text-[#D946EF]" /> URL Immagine
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        {...field} 
+                                        required 
+                                        placeholder="Inserisci URL immagine" 
+                                        className="bg-black/60 border-white/10 text-white"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={editForm.control}
+                                name="replayUrl"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                                      <Link2 size={14} className="text-[#D946EF]" /> URL Replay
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        {...field} 
+                                        required 
+                                        placeholder="Inserisci URL replay" 
+                                        className="bg-black/60 border-white/10 text-white"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            
+                            <FormField
+                              control={editForm.control}
+                              name="players"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                                    <Users size={14} className="text-[#D946EF]" /> Giocatori
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      {...field} 
+                                      required 
+                                      placeholder="es. Giocatore 1 vs Giocatore 2" 
+                                      className="bg-black/60 border-white/10 text-white"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
                             />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="form-label">Tournament</label>
-                          <input
-                            type="text"
-                            className="enhanced-input"
-                            value={editTournament}
-                            onChange={(e) => setEditTournament(e.target.value)}
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="form-label">Image URL</label>
-                            <input
-                              type="text"
-                              className="enhanced-input"
-                              value={editImageUrl}
-                              onChange={(e) => setEditImageUrl(e.target.value)}
+                            
+                            <FormField
+                              control={editForm.control}
+                              name="descriptionEn"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium text-gray-300">
+                                    Descrizione (Inglese)
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      {...field} 
+                                      required 
+                                      placeholder="Inserisci descrizione in inglese" 
+                                      className="min-h-[100px] bg-black/60 border-white/10 text-white"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
                             />
-                          </div>
-                          <div>
-                            <label className="form-label">Replay URL</label>
-                            <input
-                              type="text"
-                              className="enhanced-input"
-                              value={editReplayUrl}
-                              onChange={(e) => setEditReplayUrl(e.target.value)}
+                            
+                            <FormField
+                              control={editForm.control}
+                              name="descriptionIt"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium text-gray-300">
+                                    Descrizione (Italiano)
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      {...field} 
+                                      required 
+                                      placeholder="Inserisci descrizione in italiano" 
+                                      className="min-h-[100px] bg-black/60 border-white/10 text-white"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
                             />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="form-label">Players</label>
-                          <input
-                            type="text"
-                            className="enhanced-input"
-                            value={editPlayers}
-                            onChange={(e) => setEditPlayers(e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="form-label">Description (English)</label>
-                          <textarea
-                            className="enhanced-textarea min-h-[100px]"
-                            value={editDescriptionEn}
-                            onChange={(e) => setEditDescriptionEn(e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="form-label">Description (Italian)</label>
-                          <textarea
-                            className="enhanced-textarea min-h-[100px]"
-                            value={editDescriptionIt}
-                            onChange={(e) => setEditDescriptionIt(e.target.value)}
-                          />
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button onClick={handleUpdate} className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white">
-                            <Save size={16} /> Save Changes
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setEditingGame(null)}
-                            className="border-white/10 hover:bg-white/5 text-white"
-                          >
-                            <X size={16} /> Cancel
-                          </Button>
-                        </div>
+                            
+                            <div className="flex space-x-2 pt-2">
+                              <Button 
+                                type="submit" 
+                                className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white flex items-center gap-2"
+                              >
+                                <Save size={16} /> Salva Modifiche
+                              </Button>
+                              <Button 
+                                type="button"
+                                variant="outline" 
+                                onClick={() => setEditingGame(null)}
+                                className="border-white/10 bg-black/20 hover:bg-white/5 text-white flex items-center gap-2"
+                              >
+                                <X size={16} /> Annulla
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
                       </div>
                     ) : (
                       <div>
@@ -270,13 +379,13 @@ const GameManager = () => {
                             onClick={() => handleEdit(game)}
                             className="bg-black/30 hover:bg-black/50 border border-white/10 hover:border-white/20 text-white"
                           >
-                            <Edit size={16} /> Edit
+                            <Edit size={16} className="mr-1.5" /> Edit
                           </Button>
                           <Button 
                             onClick={() => handleDelete(game.id)}
                             className="bg-red-500/70 hover:bg-red-500/80 text-white"
                           >
-                            <Trash2 size={16} /> Delete
+                            <Trash2 size={16} className="mr-1.5" /> Delete
                           </Button>
                         </div>
                       </div>
