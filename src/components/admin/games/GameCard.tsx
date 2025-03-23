@@ -4,7 +4,7 @@ import { Game } from "../types/GameTypes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Edit, Trash2, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
+import { Edit, Trash2, ChevronUp, ChevronDown, ExternalLink } from "lucide-react";
 
 interface GameCardProps {
   game: Game;
@@ -32,22 +32,22 @@ const GameCard: React.FC<GameCardProps> = ({
           {reordering && (
             <div className="absolute right-4 top-4 flex flex-col gap-1">
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="icon" 
                 onClick={() => onMoveItem(game.id, 'up')}
                 disabled={isFirst}
-                className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white"
+                className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white border-white/30"
               >
-                <ArrowUp size={16} />
+                <ChevronUp size={20} />
               </Button>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="icon" 
                 onClick={() => onMoveItem(game.id, 'down')}
                 disabled={isLast}
-                className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white"
+                className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white border-white/30"
               >
-                <ArrowDown size={16} />
+                <ChevronDown size={20} />
               </Button>
             </div>
           )}
