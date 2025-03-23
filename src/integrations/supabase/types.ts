@@ -48,6 +48,7 @@ export type Database = {
           image_url: string
           phase: string
           players: string
+          position: number | null
           replay_url: string
           tournament: string
           updated_at: string
@@ -61,6 +62,7 @@ export type Database = {
           image_url: string
           phase: string
           players: string
+          position?: number | null
           replay_url: string
           tournament: string
           updated_at?: string
@@ -74,6 +76,7 @@ export type Database = {
           image_url?: string
           phase?: string
           players?: string
+          position?: number | null
           replay_url?: string
           tournament?: string
           updated_at?: string
@@ -163,7 +166,9 @@ export type Database = {
           image: string
           join_date: string | null
           name: string
+          position: number | null
           role: string
+          smogon: string | null
           updated_at: string
         }
         Insert: {
@@ -173,7 +178,9 @@ export type Database = {
           image: string
           join_date?: string | null
           name: string
+          position?: number | null
           role: string
+          smogon?: string | null
           updated_at?: string
         }
         Update: {
@@ -183,7 +190,9 @@ export type Database = {
           image?: string
           join_date?: string | null
           name?: string
+          position?: number | null
           role?: string
+          smogon?: string | null
           updated_at?: string
         }
         Relationships: []
