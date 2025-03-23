@@ -30,6 +30,17 @@ const AddGameForm = ({ onAddGame }) => {
   const handleSubmit = async (values) => {
     setIsSubmitting(true);
     try {
+      // Get the maximum position value to place the new game at the beginning
+      const { data: maxPositionData } = await supabase
+        .from('best_games')
+        .select('position')
+        .order('position', { ascending: false })
+        .limit(1);
+
+      const maxPosition = maxPositionData && maxPositionData.length > 0 
+        ? (maxPositionData[0].position || 0) 
+        : 0;
+
       const { data, error } = await supabase.from("best_games").insert({
         format: values.format,
         phase: values.phase,
@@ -39,6 +50,7 @@ const AddGameForm = ({ onAddGame }) => {
         players: values.players,
         description_en: values.descriptionEn,
         description_it: values.descriptionIt,
+        position: maxPosition + 1, // Set position to be after the current last item
       }).select();
 
       if (error) throw error;

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Gamepad2, Plus, Save, Trash2, X, Link2, Image, Users, Info } from "lucide-react";
+import { Edit, Gamepad2, Plus, Save, Trash2, X, Link2, Image, Users, Info, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ const GameManager = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingGame, setEditingGame] = useState(null);
+  const [reordering, setReordering] = useState(false);
   const { toast } = useToast();
   
   const editForm = useForm({
@@ -36,6 +37,7 @@ const GameManager = () => {
       const { data, error } = await supabase
         .from('best_games')
         .select('*')
+        .order('position', { ascending: true })
         .order('id', { ascending: false });
 
       if (error) throw error;
@@ -138,20 +140,75 @@ const GameManager = () => {
     fetchGames();
   };
 
+  const toggleReordering = () => {
+    setReordering(!reordering);
+  };
+
+  const moveItem = async (id, direction) => {
+    const currentIndex = games.findIndex(game => game.id === id);
+    if (
+      (direction === 'up' && currentIndex === 0) || 
+      (direction === 'down' && currentIndex === games.length - 1)
+    ) {
+      return;
+    }
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const newGames = [...games];
+    const targetItem = newGames[currentIndex];
+    const swapItem = newGames[newIndex];
+
+    // Swap positions
+    try {
+      const updates = [
+        { id: targetItem.id, position: swapItem.position || newIndex },
+        { id: swapItem.id, position: targetItem.position || currentIndex }
+      ];
+
+      const { error } = await supabase
+        .from('best_games')
+        .upsert(updates);
+
+      if (error) throw error;
+
+      // Update local state for immediate UI update
+      [newGames[currentIndex], newGames[newIndex]] = [newGames[newIndex], newGames[currentIndex]];
+      setGames(newGames);
+    } catch (error) {
+      console.error("Error updating position:", error);
+      toast({
+        title: "Error updating position",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <Gamepad2 size={20} className="text-[#D946EF]" /> Best Games Management
         </h2>
-        <Button className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white">
-          <Plus size={18} /> Add Game
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            onClick={toggleReordering}
+            className={`${reordering ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black/30 hover:bg-black/50'} 
+              border border-white/10 text-white transition-all duration-200`}
+          >
+            {reordering ? 'Done Reordering' : 'Reorder Games'}
+          </Button>
+          <Button className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white">
+            <Plus size={18} /> Add Game
+          </Button>
+        </div>
       </div>
       
-      <AddGameForm onAddGame={handleAddGame} />
+      {!reordering && <AddGameForm onAddGame={handleAddGame} />}
       
-      <h2 className="text-xl font-bold mb-4 text-white/90">Current Best Games</h2>
+      <h2 className="text-xl font-bold mb-4 text-white/90">
+        {reordering ? 'Drag or use arrows to reorder games' : 'Current Best Games'}
+      </h2>
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -160,9 +217,31 @@ const GameManager = () => {
       ) : (
         <div className="space-y-6">
           {games.map((game) => (
-            <Card key={game.id} className="border border-white/10 bg-black/40 backdrop-blur-sm hover:shadow-lg hover:shadow-[#D946EF]/5 transition-all duration-300">
+            <Card key={game.id} className={`border border-white/10 bg-black/40 backdrop-blur-sm transition-all duration-300 ${reordering ? 'border-blue-500/30' : 'hover:shadow-lg hover:shadow-[#D946EF]/5'}`}>
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
+                  {reordering && (
+                    <div className="absolute right-4 top-4 flex flex-col gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => moveItem(game.id, 'up')}
+                        disabled={games.indexOf(game) === 0}
+                        className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white"
+                      >
+                        <ArrowUp size={16} />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => moveItem(game.id, 'down')}
+                        disabled={games.indexOf(game) === games.length - 1}
+                        className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white"
+                      >
+                        <ArrowDown size={16} />
+                      </Button>
+                    </div>
+                  )}
                   <div className="w-full md:w-1/3">
                     <img 
                       src={game.image_url} 
@@ -360,6 +439,11 @@ const GameManager = () => {
                       </div>
                     ) : (
                       <div>
+                        {reordering && (
+                          <div className="mb-3 inline-block bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded text-xs font-medium">
+                            Position: {games.indexOf(game) + 1}
+                          </div>
+                        )}
                         <div className="flex flex-wrap gap-2 mb-2">
                           <span className="status-badge bg-blue-500/20 text-blue-300 border border-blue-500/30">{game.format}</span>
                           <span className="status-badge bg-purple-500/20 text-purple-300 border border-purple-500/30">{game.phase}</span>
@@ -374,20 +458,22 @@ const GameManager = () => {
                           <h4 className="font-semibold mb-1 text-white/80">Description (IT):</h4>
                           <p className="text-sm text-gray-300">{game.description_it}</p>
                         </div>
-                        <div className="flex space-x-2 mt-4">
-                          <Button 
-                            onClick={() => handleEdit(game)}
-                            className="bg-black/30 hover:bg-black/50 border border-white/10 hover:border-white/20 text-white"
-                          >
-                            <Edit size={16} className="mr-1.5" /> Edit
-                          </Button>
-                          <Button 
-                            onClick={() => handleDelete(game.id)}
-                            className="bg-red-500/70 hover:bg-red-500/80 text-white"
-                          >
-                            <Trash2 size={16} className="mr-1.5" /> Delete
-                          </Button>
-                        </div>
+                        {!reordering && (
+                          <div className="flex space-x-2 mt-4">
+                            <Button 
+                              onClick={() => handleEdit(game)}
+                              className="bg-black/30 hover:bg-black/50 border border-white/10 hover:border-white/20 text-white"
+                            >
+                              <Edit size={16} className="mr-1.5" /> Edit
+                            </Button>
+                            <Button 
+                              onClick={() => handleDelete(game.id)}
+                              className="bg-red-500/70 hover:bg-red-500/80 text-white"
+                            >
+                              <Trash2 size={16} className="mr-1.5" /> Delete
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

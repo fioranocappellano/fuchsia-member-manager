@@ -32,12 +32,24 @@ const AddMemberForm = ({ onAddMember }) => {
         .map((a) => a.trim())
         .filter((a) => a);
 
+      // Get the maximum position value to place the new member at the end
+      const { data: maxPositionData } = await supabase
+        .from('members')
+        .select('position')
+        .order('position', { ascending: false })
+        .limit(1);
+
+      const maxPosition = maxPositionData && maxPositionData.length > 0 
+        ? (maxPositionData[0].position || 0) 
+        : 0;
+
       const { data, error } = await supabase.from("members").insert({
         name: values.name,
         image: values.image,
         role: values.role,
         join_date: values.joinDate,
         achievements: achievementsArray,
+        position: maxPosition + 1, // Set the position to be after the current last item
       }).select();
 
       if (error) throw error;
