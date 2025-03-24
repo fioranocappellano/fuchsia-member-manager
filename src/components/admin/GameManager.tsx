@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Gamepad2 } from "lucide-react";
+import { Gamepad2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AddGameForm from "./forms/AddGameForm";
 import GameList from "./games/GameList";
@@ -13,6 +13,7 @@ const GameManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [reordering, setReordering] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
   
   const fetchGames = async () => {
@@ -151,6 +152,10 @@ const GameManager = () => {
 
   const toggleReordering = () => {
     setReordering(!reordering);
+    // Hide add form when reordering
+    if (!reordering) {
+      setShowAddForm(false);
+    }
   };
 
   const moveItem = async (id: string, direction: 'up' | 'down') => {
@@ -223,6 +228,14 @@ const GameManager = () => {
     }
   };
 
+  const toggleAddForm = () => {
+    setShowAddForm(!showAddForm);
+    // Exit reordering mode when showing add form
+    if (reordering) {
+      setReordering(false);
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -230,17 +243,30 @@ const GameManager = () => {
           <Gamepad2 size={24} className="text-[#D946EF]" /> Best Games Management
         </h2>
         <div className="flex gap-3">
-          <Button 
-            onClick={toggleReordering}
-            className={`${reordering ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black/30 hover:bg-black/50'} 
-              border border-white/10 text-white transition-all duration-200`}
-          >
-            {reordering ? 'Done Reordering' : 'Reorder Games'}
-          </Button>
+          {!editingGame && (
+            <>
+              <Button 
+                onClick={toggleAddForm}
+                className={`${showAddForm ? 'bg-gray-600 hover:bg-gray-700' : 'bg-[#D946EF] hover:bg-[#D946EF]/90'} 
+                  text-white transition-all duration-200`}
+              >
+                <Plus size={16} className="mr-1" />
+                {showAddForm ? 'Hide Form' : 'Add New Game'}
+              </Button>
+              <Button 
+                onClick={toggleReordering}
+                className={`${reordering ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black/30 hover:bg-black/50'} 
+                  border border-white/10 text-white transition-all duration-200`}
+                disabled={showAddForm}
+              >
+                {reordering ? 'Done Reordering' : 'Reorder Games'}
+              </Button>
+            </>
+          )}
         </div>
       </div>
       
-      {!reordering && <AddGameForm onAddGame={handleAddGame} />}
+      {showAddForm && <AddGameForm onAddGame={handleAddGame} />}
       
       <h2 className="text-xl font-bold mb-4 text-white/90 mt-8">
         {reordering ? 'Use arrows to reorder games' : 'Current Games'}
