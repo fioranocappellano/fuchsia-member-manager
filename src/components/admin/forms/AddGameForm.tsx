@@ -66,11 +66,18 @@ const AddGameForm: React.FC<AddGameFormProps> = ({ onAddGame }) => {
         ? Number(gamesData[0].position) + 1 
         : 0;
       
-      // Add the game with the calculated position - Fix: correctly structure the insert object
+      // Make sure to pass all the required fields with correct types
       const { error } = await supabase
         .from('best_games')
         .insert({
-          ...values,
+          tournament: values.tournament,
+          phase: values.phase,
+          format: values.format,
+          players: values.players,
+          description_it: values.description_it,
+          description_en: values.description_en,
+          image_url: values.image_url,
+          replay_url: values.replay_url,
           position: nextPosition
         });
       
