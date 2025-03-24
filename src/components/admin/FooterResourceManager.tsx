@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -249,15 +248,40 @@ const FooterResourceManager = () => {
     if (index <= 0) return;
     
     try {
-      const updatedResources = moveItemUp([...categoryResources], index);
-      const resourceToUpdate = updatedResources[index - 1];
-      const prevResource = updatedResources[index];
+      // Get the resources we want to swap
+      const currentResource = categoryResources[index];
+      const prevResource = categoryResources[index - 1];
       
-      await Promise.all([
-        supabase.from("footer_resources").update({ position: resourceToUpdate.position }).eq("id", resourceToUpdate.id),
-        supabase.from("footer_resources").update({ position: prevResource.position }).eq("id", prevResource.id)
-      ]);
+      // Swap their positions
+      const tempPosition = currentResource.position;
+      currentResource.position = prevResource.position;
+      prevResource.position = tempPosition;
       
+      // Update both resources in the database
+      const promises = [
+        supabase
+          .from("footer_resources")
+          .update({ position: currentResource.position })
+          .eq("id", currentResource.id),
+        supabase
+          .from("footer_resources")
+          .update({ position: prevResource.position })
+          .eq("id", prevResource.id)
+      ];
+      
+      const results = await Promise.all(promises);
+      
+      // Check for errors
+      if (results[0].error || results[1].error) {
+        throw results[0].error || results[1].error;
+      }
+      
+      toast({
+        title: "Success",
+        description: "Resource order updated successfully",
+      });
+      
+      // Refresh resources
       fetchResources();
     } catch (error: any) {
       console.error("Error moving resource:", error);
@@ -273,15 +297,40 @@ const FooterResourceManager = () => {
     if (index >= categoryResources.length - 1) return;
     
     try {
-      const updatedResources = moveItemDown([...categoryResources], index);
-      const resourceToUpdate = updatedResources[index + 1];
-      const nextResource = updatedResources[index];
+      // Get the resources we want to swap
+      const currentResource = categoryResources[index];
+      const nextResource = categoryResources[index + 1];
       
-      await Promise.all([
-        supabase.from("footer_resources").update({ position: resourceToUpdate.position }).eq("id", resourceToUpdate.id),
-        supabase.from("footer_resources").update({ position: nextResource.position }).eq("id", nextResource.id)
-      ]);
+      // Swap their positions
+      const tempPosition = currentResource.position;
+      currentResource.position = nextResource.position;
+      nextResource.position = tempPosition;
       
+      // Update both resources in the database
+      const promises = [
+        supabase
+          .from("footer_resources")
+          .update({ position: currentResource.position })
+          .eq("id", currentResource.id),
+        supabase
+          .from("footer_resources")
+          .update({ position: nextResource.position })
+          .eq("id", nextResource.id)
+      ];
+      
+      const results = await Promise.all(promises);
+      
+      // Check for errors
+      if (results[0].error || results[1].error) {
+        throw results[0].error || results[1].error;
+      }
+      
+      toast({
+        title: "Success",
+        description: "Resource order updated successfully",
+      });
+      
+      // Refresh resources
       fetchResources();
     } catch (error: any) {
       console.error("Error moving resource:", error);

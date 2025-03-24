@@ -36,18 +36,18 @@ const GameCard: React.FC<GameCardProps> = ({
                 size="icon" 
                 onClick={() => onMoveItem(game.id, 'up')}
                 disabled={isFirst}
-                className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white border-white/30"
+                className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white border-white/30 shadow-md"
               >
-                <ChevronUp size={20} />
+                <ChevronUp size={20} className="text-white" />
               </Button>
               <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={() => onMoveItem(game.id, 'down')}
                 disabled={isLast}
-                className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white border-white/30"
+                className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white border-white/30 shadow-md"
               >
-                <ChevronDown size={20} />
+                <ChevronDown size={20} className="text-white" />
               </Button>
             </div>
           )}

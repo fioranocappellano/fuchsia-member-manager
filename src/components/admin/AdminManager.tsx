@@ -1,36 +1,48 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Shield, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Check, X, Mail, UserPlus, Loader2, RefreshCw, ShieldCheck, Shield } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+interface Admin {
+  id: string;
+  email: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface User {
+  id: string;
+  email: string;
+  created_at: string;
+}
 
 const AdminManager = () => {
-  const [admins, setAdmins] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [loadingAdmins, setLoadingAdmins] = useState(true);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
-  const [firstAdmin, setFirstAdmin] = useState(null);
+  const isMobile = useIsMobile();
 
   const fetchAdmins = async () => {
     try {
-      setLoading(true);
+      setLoadingAdmins(true);
       const { data, error } = await supabase
         .from('admins')
         .select('*')
-        .order('created_at', { ascending: true });
-
+        .order('created_at', { ascending: false });
+      
       if (error) throw error;
       setAdmins(data || []);
-      
-      if (data && data.length > 0) {
-        setFirstAdmin(data[0].id);
-      }
     } catch (error) {
       console.error("Error fetching admins:", error);
       toast({
@@ -39,40 +51,29 @@ const AdminManager = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setLoadingAdmins(false);
     }
   };
 
   const fetchUsers = async () => {
     try {
-      // Use the authenticated_users_view instead of the admin API
+      setLoadingUsers(true);
       const { data, error } = await supabase
         .from('authenticated_users_view')
-        .select('*');
-
-      if (error) throw error;
+        .select('*')
+        .order('created_at', { ascending: false });
       
-      // If we got data, use it, otherwise fall back to at least showing the current user
-      if (data && data.length > 0) {
-        setUsers(data);
-      } else if (user) {
-        // If no data but we have the current user, at least show them
-        setUsers([{
-          id: user.id,
-          email: user.email,
-          created_at: user.created_at,
-        }]);
-      }
+      if (error) throw error;
+      setUsers(data || []);
     } catch (error) {
       console.error("Error fetching users:", error);
-      // If fetching fails, at least show the current user
-      if (user) {
-        setUsers([{
-          id: user.id,
-          email: user.email,
-          created_at: user.created_at,
-        }]);
-      }
+      toast({
+        title: "Error fetching users",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
@@ -84,7 +85,7 @@ const AdminManager = () => {
   const handleAddAdmin = async () => {
     if (!newAdminEmail) {
       toast({
-        title: "Email required",
+        title: "Error",
         description: "Please enter an email address",
         variant: "destructive",
       });
@@ -92,84 +93,97 @@ const AdminManager = () => {
     }
 
     try {
-      const matchedUser = users.find(u => u.email === newAdminEmail);
+      setAddingAdmin(true);
       
-      if (!matchedUser) {
+      // Check if user exists
+      const { data: userData, error: userError } = await supabase
+        .from('authenticated_users_view')
+        .select('id')
+        .eq('email', newAdminEmail)
+        .single();
+      
+      if (userError) {
         toast({
           title: "User not found",
-          description: "No user with that email exists in the system",
+          description: "Make sure the user has registered and authenticated with this email",
           variant: "destructive",
         });
         return;
       }
-
-      const isAlreadyAdmin = admins.some(admin => admin.id === matchedUser.id);
       
-      if (isAlreadyAdmin) {
-        toast({
-          title: "Already an admin",
-          description: "This user is already an admin",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data, error } = await supabase
+      // Check if already an admin
+      const { data: existingAdmin, error: adminCheckError } = await supabase
         .from('admins')
-        .insert({
-          id: matchedUser.id,
-          email: matchedUser.email,
-          is_active: true
-        })
-        .select();
-
-      if (error) throw error;
-
-      toast({
-        title: "Admin added",
-        description: "The admin has been added successfully",
-      });
-
+        .select('*')
+        .eq('email', newAdminEmail);
+      
+      if (adminCheckError) throw adminCheckError;
+      
+      if (existingAdmin && existingAdmin.length > 0) {
+        // If already an admin but inactive, activate them
+        if (!existingAdmin[0].is_active) {
+          const { error: updateError } = await supabase
+            .from('admins')
+            .update({ is_active: true })
+            .eq('id', existingAdmin[0].id);
+          
+          if (updateError) throw updateError;
+          
+          toast({
+            title: "Admin reactivated",
+            description: `${newAdminEmail} has been reactivated as an admin`,
+          });
+        } else {
+          toast({
+            title: "Already an admin",
+            description: `${newAdminEmail} is already an active admin`,
+          });
+        }
+      } else {
+        // Add as new admin
+        const { error: insertError } = await supabase
+          .from('admins')
+          .insert([{ id: userData.id, email: newAdminEmail }]);
+        
+        if (insertError) throw insertError;
+        
+        toast({
+          title: "Admin added",
+          description: `${newAdminEmail} has been added as an admin`,
+        });
+      }
+      
       setNewAdminEmail("");
       fetchAdmins();
     } catch (error) {
       console.error("Error adding admin:", error);
       toast({
         title: "Error adding admin",
-        description: error.message || "There was a problem adding the admin",
+        description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setAddingAdmin(false);
     }
   };
 
-  const handleToggleAdminStatus = async (id, isCurrentlyActive) => {
-    if (id === firstAdmin) {
-      toast({
-        title: "Cannot deactivate first admin",
-        description: "The first registered admin cannot be deactivated for security reasons",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  const handleToggleAdmin = async (admin: Admin) => {
     try {
       const { error } = await supabase
         .from('admins')
-        .update({ is_active: !isCurrentlyActive })
-        .eq('id', id);
-
+        .update({ is_active: !admin.is_active })
+        .eq('id', admin.id);
+      
       if (error) throw error;
-
+      
       toast({
-        title: isCurrentlyActive ? "Admin deactivated" : "Admin activated",
-        description: isCurrentlyActive 
-          ? "The admin has been deactivated successfully"
-          : "The admin has been activated successfully",
+        title: admin.is_active ? "Admin deactivated" : "Admin activated",
+        description: `${admin.email} has been ${admin.is_active ? "deactivated" : "activated"}`,
       });
-
+      
       fetchAdmins();
     } catch (error) {
-      console.error("Error updating admin status:", error);
+      console.error("Error toggling admin status:", error);
       toast({
         title: "Error updating admin",
         description: error.message,
@@ -178,195 +192,258 @@ const AdminManager = () => {
     }
   };
 
-  const handleDeleteAdmin = async (id) => {
-    if (id === firstAdmin) {
-      toast({
-        title: "Cannot delete first admin",
-        description: "The first registered admin cannot be deleted for security reasons",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (id === user?.id) {
-      toast({
-        title: "Cannot delete yourself",
-        description: "You cannot remove your own admin privileges",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (window.confirm("Are you sure you want to delete this admin?")) {
-      try {
-        const { error } = await supabase
-          .from('admins')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Admin deleted",
-          description: "The admin has been deleted successfully",
-        });
-
-        fetchAdmins();
-      } catch (error) {
-        console.error("Error deleting admin:", error);
-        toast({
-          title: "Error deleting admin",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    }
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchAdmins(), fetchUsers()]);
+    setRefreshing(false);
   };
+
+  const renderMobileAdminList = () => (
+    <div className="space-y-3 mt-4">
+      {admins.map(admin => (
+        <Card key={admin.id} className="bg-black/40 border-white/10">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-medium text-white flex items-center gap-1.5">
+                  <Mail className="h-4 w-4 text-[#D946EF]" />
+                  {admin.email}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Added: {new Date(admin.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex items-center">
+                <span className={`mr-2 px-2 py-0.5 rounded text-xs ${admin.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                  {admin.is_active ? 'Active' : 'Inactive'}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleToggleAdmin(admin)}
+                  className={admin.is_active ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}
+                >
+                  {admin.is_active ? 'Deactivate' : 'Activate'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
+  const renderMobileUserList = () => (
+    <div className="space-y-3 mt-4">
+      {users.map(user => (
+        <Card key={user.id} className="bg-black/40 border-white/10">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-medium text-white flex items-center gap-1.5">
+                  <Mail className="h-4 w-4 text-blue-400" />
+                  {user.email}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Registered: {new Date(user.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div>
+                {admins.some(admin => admin.email === user.email && admin.is_active) ? (
+                  <span className="px-2 py-1 bg-[#D946EF]/20 text-[#D946EF] rounded-full text-xs flex items-center gap-1">
+                    <ShieldCheck className="h-3 w-3" /> Admin
+                  </span>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setNewAdminEmail(user.email);
+                      setTimeout(() => {
+                        handleAddAdmin();
+                      }, 100);
+                    }}
+                    className="border-[#D946EF]/30 text-[#D946EF] hover:bg-[#D946EF]/10 text-xs"
+                  >
+                    <UserPlus className="h-3 w-3 mr-1" /> Make Admin
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Shield size={20} className="text-[#D946EF]" /> Admin Management
+          <Shield size={24} className="text-[#D946EF]" /> User & Admin Management
         </h2>
+        <Button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="bg-black/30 hover:bg-black/50 border border-white/10 text-white"
+        >
+          {refreshing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4" /> Refresh
+            </>
+          )}
+        </Button>
       </div>
       
-      <Card className="border border-white/10 bg-black/40 backdrop-blur-sm mb-6">
-        <CardHeader className="bg-gradient-to-r from-[#D946EF]/20 to-transparent border-b border-white/10 px-6 py-4">
-          <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-            <Plus size={18} className="text-[#D946EF]" /> Add New Admin
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="flex gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Admin Section */}
+        <div className="bg-black/20 backdrop-blur-sm p-6 rounded-lg border border-white/10">
+          <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-[#D946EF]" /> Administrators
+          </h3>
+          
+          <div className="flex space-x-2 mb-6">
             <Input
               type="email"
               value={newAdminEmail}
               onChange={(e) => setNewAdminEmail(e.target.value)}
-              placeholder="Enter email address"
-              className="flex-1 bg-black/50 border-white/10 text-white"
+              placeholder="Enter email to add admin"
+              className="bg-black/40 border-white/10 text-white"
             />
-            <Button onClick={handleAddAdmin} className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white">
-              <Plus size={16} className="mr-1.5" /> Add Admin
+            <Button
+              onClick={handleAddAdmin}
+              disabled={addingAdmin || !newAdminEmail}
+              className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white whitespace-nowrap"
+            >
+              {addingAdmin ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="mr-2 h-4 w-4" /> Add Admin
+                </>
+              )}
             </Button>
           </div>
-          <p className="text-sm text-gray-400 mt-2">
-            Note: The user must already have an account in the system
-          </p>
-        </CardContent>
-      </Card>
-      
-      <h2 className="text-xl font-bold mb-4 text-white/90">Current Admins</h2>
-
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D946EF]"></div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {admins.length === 0 ? (
-            <Card className="border border-white/10 bg-black/40 backdrop-blur-sm">
-              <CardContent className="p-6">
-                <p className="text-center py-8 text-gray-400">No admins found</p>
-              </CardContent>
-            </Card>
+          
+          {loadingAdmins ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader2 className="h-8 w-8 animate-spin text-[#D946EF]" />
+            </div>
+          ) : admins.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              No administrators found
+            </div>
+          ) : isMobile ? (
+            renderMobileAdminList()
           ) : (
-            admins.map((admin) => (
-              <Card key={admin.id} className="border border-white/10 bg-black/40 backdrop-blur-sm">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-white">{admin.email}</h3>
-                      <p className="text-sm text-gray-400">ID: {admin.id}</p>
-                      <div className="mt-1">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/10">
+                  <TableHead className="text-white">Email</TableHead>
+                  <TableHead className="text-white">Status</TableHead>
+                  <TableHead className="text-white">Added</TableHead>
+                  <TableHead className="text-white text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {admins.map((admin) => (
+                  <TableRow key={admin.id} className="border-white/10 hover:bg-white/5">
+                    <TableCell className="font-medium text-white">{admin.email}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${admin.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {admin.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-gray-400">{new Date(admin.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleToggleAdmin(admin)}
+                        className={admin.is_active ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}
+                      >
                         {admin.is_active ? (
-                          <span className="status-badge bg-green-500/20 text-green-300 border border-green-500/30">
-                            Active
-                          </span>
+                          <>
+                            <X className="h-4 w-4 mr-1" /> Deactivate
+                          </>
                         ) : (
-                          <span className="status-badge bg-red-500/20 text-red-300 border border-red-500/30">
-                            Inactive
-                          </span>
+                          <>
+                            <Check className="h-4 w-4 mr-1" /> Activate
+                          </>
                         )}
-                        {admin.id === firstAdmin && (
-                          <span className="status-badge bg-amber-500/20 text-amber-300 border border-amber-500/30 ml-2">
-                            Primary Admin
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleToggleAdminStatus(admin.id, admin.is_active)}
-                        className={admin.is_active ? "bg-white/10 hover:bg-white/15 text-white" : "bg-green-500/20 hover:bg-green-500/30 text-green-300"}
-                        disabled={admin.id === firstAdmin}
-                      >
-                        {admin.is_active ? "Deactivate" : "Activate"}
                       </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => handleDeleteAdmin(admin.id)}
-                        className="bg-red-500/70 hover:bg-red-500/80 text-white"
-                        disabled={admin.id === user?.id || admin.id === firstAdmin}
-                      >
-                        <Trash2 size={16} className="mr-1.5" /> Delete
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </div>
-      )}
-
-      <h2 className="text-xl font-bold my-6 text-white/90">Registered Users</h2>
-      <Card className="border border-white/10 bg-black/40 backdrop-blur-sm">
-        <CardContent className="p-0">
-          <table className="w-full">
-            <thead className="bg-black/50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Admin Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800">
-              {users.map((user) => {
-                const isAdmin = admins.some(admin => admin.id === user.id && admin.is_active);
-                const isPrimaryAdmin = user.id === firstAdmin;
-                return (
-                  <tr key={user.id} className="hover:bg-white/5">
-                    <td className="px-6 py-4 text-sm text-white">{user.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-400">{user.id.substring(0, 8)}...</td>
-                    <td className="px-6 py-4 text-sm text-gray-400">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {isAdmin && isPrimaryAdmin ? (
-                        <span className="status-badge bg-amber-500/20 text-amber-300 border border-amber-500/30">Primary Admin</span>
-                      ) : isAdmin ? (
-                        <span className="status-badge bg-green-500/20 text-green-300 border border-green-500/30">Admin</span>
+        
+        {/* Users Section */}
+        <div className="bg-black/20 backdrop-blur-sm p-6 rounded-lg border border-white/10">
+          <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+            <Mail className="h-5 w-5 text-blue-400" /> Registered Users
+          </h3>
+          
+          {loadingUsers ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              No users found
+            </div>
+          ) : isMobile ? (
+            renderMobileUserList()
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/10">
+                  <TableHead className="text-white">Email</TableHead>
+                  <TableHead className="text-white">Registered</TableHead>
+                  <TableHead className="text-white text-right">Admin Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id} className="border-white/10 hover:bg-white/5">
+                    <TableCell className="font-medium text-white">{user.email}</TableCell>
+                    <TableCell className="text-gray-400">{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">
+                      {admins.some(admin => admin.email === user.email && admin.is_active) ? (
+                        <span className="px-2 py-1 bg-[#D946EF]/20 text-[#D946EF] rounded-full text-xs flex items-center gap-1 inline-flex justify-center">
+                          <ShieldCheck className="h-3 w-3" /> Admin
+                        </span>
                       ) : (
-                        <span className="status-badge bg-gray-500/20 text-gray-300 border border-gray-500/30">User</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setNewAdminEmail(user.email);
+                            setTimeout(() => {
+                              handleAddAdmin();
+                            }, 100);
+                          }}
+                          className="border-[#D946EF]/30 text-[#D946EF] hover:bg-[#D946EF]/10"
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" /> Make Admin
+                        </Button>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-400">No users found</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
