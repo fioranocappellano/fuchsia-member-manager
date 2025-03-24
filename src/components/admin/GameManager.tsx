@@ -7,13 +7,20 @@ import AddGameForm from "./forms/AddGameForm";
 import GameList from "./games/GameList";
 import GameEditForm from "./games/GameEditForm";
 import { Game } from "./types/GameTypes";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const GameManager = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [reordering, setReordering] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   
   const fetchGames = async () => {
@@ -152,9 +159,9 @@ const GameManager = () => {
 
   const toggleReordering = () => {
     setReordering(!reordering);
-    // Hide add form when reordering
+    // Close dialog when reordering
     if (!reordering) {
-      setShowAddForm(false);
+      setDialogOpen(false);
     }
   };
 
@@ -228,14 +235,6 @@ const GameManager = () => {
     }
   };
 
-  const toggleAddForm = () => {
-    setShowAddForm(!showAddForm);
-    // Exit reordering mode when showing add form
-    if (reordering) {
-      setReordering(false);
-    }
-  };
-
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -245,19 +244,31 @@ const GameManager = () => {
         <div className="flex gap-3">
           {!editingGame && (
             <>
-              <Button 
-                onClick={toggleAddForm}
-                className={`${showAddForm ? 'bg-gray-600 hover:bg-gray-700' : 'bg-[#D946EF] hover:bg-[#D946EF]/90'} 
-                  text-white transition-all duration-200`}
-              >
-                <Plus size={16} className="mr-1" />
-                {showAddForm ? 'Hide Form' : 'Add New Game'}
-              </Button>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="bg-[#D946EF] hover:bg-[#D946EF]/90 text-white font-medium shadow-md shadow-[#D946EF]/20 hover:shadow-lg hover:shadow-[#D946EF]/30 transition-all duration-200"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Add Game
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-jf-dark border-[#D946EF]/20 text-jf-light">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
+                      <Gamepad2 className="h-5 w-5 text-[#D946EF]" /> Add New Game
+                    </DialogTitle>
+                  </DialogHeader>
+                  <AddGameForm onAddGame={() => {
+                    handleAddGame();
+                    setDialogOpen(false);
+                  }} />
+                </DialogContent>
+              </Dialog>
               <Button 
                 onClick={toggleReordering}
                 className={`${reordering ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black/30 hover:bg-black/50'} 
                   border border-white/10 text-white transition-all duration-200`}
-                disabled={showAddForm}
+                disabled={dialogOpen}
               >
                 {reordering ? 'Done Reordering' : 'Reorder Games'}
               </Button>
@@ -265,8 +276,6 @@ const GameManager = () => {
           )}
         </div>
       </div>
-      
-      {showAddForm && <AddGameForm onAddGame={handleAddGame} />}
       
       <h2 className="text-xl font-bold mb-4 text-white/90 mt-8">
         {reordering ? 'Use arrows to reorder games' : 'Current Games'}
