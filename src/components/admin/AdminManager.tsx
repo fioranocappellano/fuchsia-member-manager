@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +13,7 @@ interface Admin {
   email: string;
   is_active: boolean;
   created_at: string;
+  is_first_admin?: boolean;
 }
 
 interface User {
@@ -39,10 +39,17 @@ const AdminManager = () => {
       const { data, error } = await supabase
         .from('admins')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
       
       if (error) throw error;
-      setAdmins(data || []);
+      
+      // Mark the first admin in the list (oldest created_at)
+      const processedAdmins: Admin[] = data?.map((admin, index) => ({
+        ...admin,
+        is_first_admin: index === 0
+      })) || [];
+      
+      setAdmins(processedAdmins);
     } catch (error) {
       console.error("Error fetching admins:", error);
       toast({
@@ -168,6 +175,16 @@ const AdminManager = () => {
   };
 
   const handleToggleAdmin = async (admin: Admin) => {
+    // Prevent deactivation of the first admin
+    if (admin.is_first_admin && admin.is_active) {
+      toast({
+        title: "Cannot deactivate",
+        description: "The first admin cannot be deactivated",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('admins')
@@ -208,6 +225,11 @@ const AdminManager = () => {
                 <p className="font-medium text-white flex items-center gap-1.5">
                   <Mail className="h-4 w-4 text-[#D946EF]" />
                   {admin.email}
+                  {admin.is_first_admin && (
+                    <span className="ml-2 text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">
+                      First Admin
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
                   Added: {new Date(admin.created_at).toLocaleDateString()}
@@ -217,14 +239,25 @@ const AdminManager = () => {
                 <span className={`mr-2 px-2 py-0.5 rounded text-xs ${admin.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                   {admin.is_active ? 'Active' : 'Inactive'}
                 </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleToggleAdmin(admin)}
-                  className={admin.is_active ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}
-                >
-                  {admin.is_active ? 'Deactivate' : 'Activate'}
-                </Button>
+                {admin.is_first_admin && admin.is_active ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={true}
+                    className="border-gray-500/30 text-gray-400 cursor-not-allowed"
+                  >
+                    Protected
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleToggleAdmin(admin)}
+                    className={admin.is_active ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}
+                  >
+                    {admin.is_active ? 'Deactivate' : 'Activate'}
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -250,7 +283,7 @@ const AdminManager = () => {
               </div>
               <div>
                 {admins.some(admin => admin.email === user.email && admin.is_active) ? (
-                  <span className="px-2 py-1 bg-[#D946EF]/20 text-[#D946EF] rounded-full text-xs flex items-center gap-1">
+                  <span className="px-2 py-1 bg-[#D946EF]/20 text-[#D946EF] rounded-full text-xs flex items-center gap-1 inline-flex justify-center">
                     <ShieldCheck className="h-3 w-3" /> Admin
                   </span>
                 ) : (
@@ -354,7 +387,14 @@ const AdminManager = () => {
               <TableBody>
                 {admins.map((admin) => (
                   <TableRow key={admin.id} className="border-white/10 hover:bg-white/5">
-                    <TableCell className="font-medium text-white">{admin.email}</TableCell>
+                    <TableCell className="font-medium text-white">
+                      {admin.email}
+                      {admin.is_first_admin && (
+                        <span className="ml-2 text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">
+                          First Admin
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${admin.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                         {admin.is_active ? 'Active' : 'Inactive'}
@@ -362,22 +402,33 @@ const AdminManager = () => {
                     </TableCell>
                     <TableCell className="text-gray-400">{new Date(admin.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleToggleAdmin(admin)}
-                        className={admin.is_active ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}
-                      >
-                        {admin.is_active ? (
-                          <>
-                            <X className="h-4 w-4 mr-1" /> Deactivate
-                          </>
-                        ) : (
-                          <>
-                            <Check className="h-4 w-4 mr-1" /> Activate
-                          </>
-                        )}
-                      </Button>
+                      {admin.is_first_admin && admin.is_active ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={true}
+                          className="border-gray-500/30 text-gray-400 cursor-not-allowed"
+                        >
+                          Protected
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleToggleAdmin(admin)}
+                          className={admin.is_active ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}
+                        >
+                          {admin.is_active ? (
+                            <>
+                              <X className="h-4 w-4 mr-1" /> Deactivate
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4 mr-1" /> Activate
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
