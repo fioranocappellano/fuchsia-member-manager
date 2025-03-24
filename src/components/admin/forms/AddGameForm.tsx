@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -65,15 +66,13 @@ const AddGameForm: React.FC<AddGameFormProps> = ({ onAddGame }) => {
         ? Number(gamesData[0].position) + 1 
         : 0;
       
-      // Add the game with the calculated position
+      // Add the game with the calculated position - Fix: correctly structure the insert object
       const { error } = await supabase
         .from('best_games')
-        .insert([
-          {
-            ...values,
-            position: nextPosition
-          }
-        ]);
+        .insert({
+          ...values,
+          position: nextPosition
+        });
       
       if (error) throw error;
       
