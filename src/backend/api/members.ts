@@ -54,9 +54,15 @@ export const membersApi = {
    */
   create: async (memberData: Omit<Member, "id" | "created_at" | "updated_at">): Promise<Member> => {
     try {
+      // Make sure achievements is an array if not provided
+      const dataToInsert = {
+        ...memberData,
+        achievements: memberData.achievements || []
+      };
+      
       const { data, error } = await supabase
         .from("members")
-        .insert(memberData) // Pass memberData directly, not in an array
+        .insert(dataToInsert)
         .select()
         .single();
 

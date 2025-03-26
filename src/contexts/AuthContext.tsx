@@ -1,43 +1,101 @@
+import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@/frontend/types/api';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "../integrations/supabase/client";
-import { User } from "@/frontend/types/api";
-
-interface AuthContextType {
+type AuthContextType = {
   user: User | null;
-  isAdmin: boolean;
-  loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
-  signIn: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
+  isLoading: boolean; // Add this property
+  signUp: (email: string, password: string) => Promise<{ user: User; error: any }>;
+  signIn: (email: string, password: string) => Promise<{ user: User; error: any }>;
   signOut: () => Promise<{ error: any }>;
-  resetPassword: (email: string) => Promise<{ data: any; error: any }>;
-  updatePassword: (password: string) => Promise<{ data: any; error: any }>;
-}
+  requestPasswordReset: (email: string) => Promise<{ error: any }>;
+  updatePassword: (password: string) => Promise<{ error: any }>;
+  isAdmin: () => Promise<boolean>;
+};
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isAdmin: false,
-  loading: true,
-  signUp: async () => ({ user: null, error: null }),
-  signIn: async () => ({ user: null, error: null }),
-  signOut: async () => ({ error: null }),
-  resetPassword: async () => ({ data: null, error: null }),
-  updatePassword: async () => ({ data: null, error: null }),
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is admin
-  const checkIfAdmin = async (userId: string) => {
+  useEffect(() => {
+    const getSession = async () => {
+      setIsLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        setUser(session.user);
+      }
+      setIsLoading(false);
+    };
+
+    getSession();
+
+    supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+    });
+  }, []);
+
+  const signUp = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (data.user) {
+      setUser(data.user);
+    }
+
+    return { user: data.user as User, error };
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (data.user) {
+      setUser(data.user);
+    }
+
+    return { user: data.user as User, error };
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    setUser(null);
+    return { error };
+  };
+
+  const requestPasswordReset = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth?reset=true`,
+    });
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { data, error } = await supabase.auth.updateUser({ password });
+    if (data.user) {
+      setUser(data.user);
+    }
+    return { error };
+  };
+
+  const isAdmin = async (): Promise<boolean> => {
+    if (!user) return false;
+
     try {
       const { data, error } = await supabase
-        .from("admins")
-        .select("*")
-        .eq("id", userId)
-        .eq("is_active", true)
+        .from('admins')
+        .select('*')
+        .eq('id', user.id)
         .single();
 
       if (error) {
@@ -47,146 +105,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return !!data;
     } catch (error) {
-      console.error("Error in checkIfAdmin:", error);
+      console.error("Error checking admin status:", error);
       return false;
     }
   };
 
-  // Listen for auth changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setLoading(true);
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || "",
-          });
-          
-          // Check if user is admin
-          const adminStatus = await checkIfAdmin(session.user.id);
-          setIsAdmin(adminStatus);
-        } else {
-          setUser(null);
-          setIsAdmin(false);
-        }
-        setLoading(false);
-      }
-    );
-
-    // Get initial session
-    const getInitialSession = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || "",
-        });
-        
-        // Check if user is admin
-        const adminStatus = await checkIfAdmin(session.user.id);
-        setIsAdmin(adminStatus);
-      }
-      
-      setLoading(false);
-    };
-
-    getInitialSession();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Sign up
-  const signUp = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      return {
-        user: data.user ? { id: data.user.id, email: data.user.email || "" } : null,
-        error,
-      };
-    } catch (error) {
-      console.error("Error in signUp:", error);
-      return { user: null, error };
-    }
-  };
-
-  // Sign in
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      return {
-        user: data.user ? { id: data.user.id, email: data.user.email || "" } : null,
-        error,
-      };
-    } catch (error) {
-      console.error("Error in signIn:", error);
-      return { user: null, error };
-    }
-  };
-
-  // Sign out
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      return { error };
-    } catch (error) {
-      console.error("Error in signOut:", error);
-      return { error };
-    }
-  };
-
-  // Reset password
-  const resetPassword = async (email: string) => {
-    try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      return { data, error };
-    } catch (error) {
-      console.error("Error in resetPassword:", error);
-      return { data: null, error };
-    }
-  };
-
-  // Update password
-  const updatePassword = async (password: string) => {
-    try {
-      const { data, error } = await supabase.auth.updateUser({
-        password,
-      });
-      return { data, error };
-    } catch (error) {
-      console.error("Error in updatePassword:", error);
-      return { data: null, error };
-    }
+  const value: AuthContextType = {
+    user,
+    isLoading,
+    signUp,
+    signIn,
+    signOut,
+    requestPasswordReset,
+    updatePassword,
+    isAdmin,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAdmin,
-        loading,
-        signUp,
-        signIn,
-        signOut,
-        resetPassword,
-        updatePassword,
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={value}>
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 };
@@ -194,7 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth must be used within a AuthProvider");
   }
   return context;
 };

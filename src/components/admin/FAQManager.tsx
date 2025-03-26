@@ -4,34 +4,52 @@ import { useFAQManager } from "./faq/useFAQManager";
 import FAQManagerHeader from "./faq/FAQManagerHeader";
 import FAQList from "./faq/FAQList";
 import FAQForm from "./faq/FAQForm";
-import { NewFAQ } from "@/frontend/types/api";
+import { NewFAQ, FAQ } from "@/frontend/types/api";
 
 const FAQManager = () => {
   const {
     faqs,
     loading,
-    editingFAQ,
-    reordering,
+    newFaq,
     dialogOpen,
+    editingFaq,
+    isSubmitting,
     setDialogOpen,
-    handleEdit,
-    handleDelete,
-    handleAddFAQ,
-    handleUpdate,
-    toggleReordering,
-    moveItem,
-    setEditingFAQ
+    setNewFaq,
+    initEditingFaq,
+    fetchFAQs,
+    handleAddFaq,
+    handleEditFaq,
+    handleDeleteFaq,
+    handleToggleActive,
+    handleMoveUp,
+    handleMoveDown
   } = useFAQManager();
+
+  // State for reordering mode
+  const [reordering, setReordering] = useState(false);
+  
+  // Handlers to map to the expected prop names
+  const handleEdit = initEditingFaq;
+  const handleDelete = handleDeleteFaq;
+  const handleUpdate = handleEditFaq;
+  const moveItem = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up') {
+      return handleMoveUp(index);
+    } else {
+      return handleMoveDown(index);
+    }
+  };
+  const toggleReordering = () => setReordering(prev => !prev);
 
   return (
     <div>
-      {!editingFAQ && (
+      {!editingFaq && (
         <FAQManagerHeader
-          dialogOpen={dialogOpen}
-          setDialogOpen={setDialogOpen}
+          onAddFAQ={handleAddFaq}
           reordering={reordering}
+          setDialogOpen={setDialogOpen}
           toggleReordering={toggleReordering}
-          onAddFAQ={handleAddFAQ}
         />
       )}
       
@@ -39,17 +57,16 @@ const FAQManager = () => {
         {reordering ? 'Use arrows to reorder FAQs' : 'Current FAQs'}
       </h2>
 
-      {editingFAQ ? (
+      {editingFaq ? (
         <FAQForm 
-          faq={editingFAQ} 
+          initialData={editingFaq} 
           onSave={handleUpdate} 
-          onCancel={() => setEditingFAQ(null)} 
+          onCancel={() => initEditingFaq(null)} 
         />
       ) : (
         <FAQList
           faqs={faqs}
           loading={loading}
-          reordering={reordering}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onMoveItem={moveItem}

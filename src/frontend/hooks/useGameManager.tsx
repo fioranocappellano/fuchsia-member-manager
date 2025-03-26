@@ -1,12 +1,10 @@
-
-import { useState, useEffect } from 'react';
-import { useToast } from '@/frontend/hooks/use-toast';
-import { Game } from '@/frontend/types/api';
-import { gamesApi } from '@/backend/api/games';
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Game, GameFormData } from "@/frontend/types/api";
+import { gamesApi } from "@/backend/api";
 
 export const useGameManager = () => {
   const [games, setGames] = useState<Game[]>([]);
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -15,16 +13,15 @@ export const useGameManager = () => {
     try {
       setLoading(true);
       setError(null);
-      
       const data = await gamesApi.getAll();
-      setGames(data);
-      
+      setGames(data || []);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch games');
+      console.error("Error fetching games:", err);
+      setError(err.message || "Failed to load games");
       toast({
-        title: 'Error fetching games',
-        description: err.message || 'Something went wrong',
-        variant: 'destructive',
+        title: "Error",
+        description: err.message || "Failed to load games",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -35,66 +32,47 @@ export const useGameManager = () => {
     fetchGames();
   }, []);
 
-  const createGame = async (gameData: Omit<Game, 'id' | 'created_at' | 'updated_at'>) => {
+  const createGame = async (gameData: GameFormData) => {
     try {
       setLoading(true);
-      
-      // Ensure players is a string
-      if (typeof gameData.players !== 'string') {
-        gameData.players = String(gameData.players);
-      }
-      
-      // Calculate position if not provided
-      if (!gameData.position) {
-        gameData.position = games.length + 1;
-      }
-      
+      setError(null);
       await gamesApi.create(gameData);
-      
       toast({
-        title: 'Game created',
-        description: 'The game was created successfully',
+        title: "Success",
+        description: "Game created successfully",
       });
-      
-      await fetchGames();
-      return true;
+      fetchGames();
     } catch (err: any) {
+      console.error("Error creating game:", err);
+      setError(err.message || "Failed to create game");
       toast({
-        title: 'Error creating game',
-        description: err.message || 'Something went wrong',
-        variant: 'destructive',
+        title: "Error",
+        description: err.message || "Failed to create game",
+        variant: "destructive",
       });
-      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateGame = async (gameData: Partial<Game> & { id: string }) => {
+  const updateGame = async (gameData: Game) => {
     try {
       setLoading(true);
-      
-      // Ensure players is a string
-      if (typeof gameData.players !== 'string' && gameData.players !== undefined) {
-        gameData.players = String(gameData.players);
-      }
-      
+      setError(null);
       await gamesApi.update(gameData.id, gameData);
-      
       toast({
-        title: 'Game updated',
-        description: 'The game was updated successfully',
+        title: "Success",
+        description: "Game updated successfully",
       });
-      
-      await fetchGames();
-      return true;
+      fetchGames();
     } catch (err: any) {
+      console.error("Error updating game:", err);
+      setError(err.message || "Failed to update game");
       toast({
-        title: 'Error updating game',
-        description: err.message || 'Something went wrong',
-        variant: 'destructive',
+        title: "Error",
+        description: err.message || "Failed to update game",
+        variant: "destructive",
       });
-      return false;
     } finally {
       setLoading(false);
     }
@@ -103,20 +81,20 @@ export const useGameManager = () => {
   const deleteGame = async (id: string) => {
     try {
       setLoading(true);
-      
+      setError(null);
       await gamesApi.delete(id);
-      
       toast({
-        title: 'Game deleted',
-        description: 'The game was deleted successfully',
+        title: "Success",
+        description: "Game deleted successfully",
       });
-      
-      await fetchGames();
+      fetchGames();
     } catch (err: any) {
+      console.error("Error deleting game:", err);
+      setError(err.message || "Failed to delete game");
       toast({
-        title: 'Error deleting game',
-        description: err.message || 'Something went wrong',
-        variant: 'destructive',
+        title: "Error",
+        description: err.message || "Failed to delete game",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -126,31 +104,34 @@ export const useGameManager = () => {
   const updatePosition = async (id: string, direction: 'up' | 'down') => {
     try {
       setLoading(true);
-      
+      setError(null);
       await gamesApi.updatePosition(id, direction);
-      
-      await fetchGames();
+      fetchGames();
     } catch (err: any) {
+      console.error("Error updating game position:", err);
+      setError(err.message || "Failed to update game position");
       toast({
-        title: 'Error changing position',
-        description: err.message || 'Something went wrong',
-        variant: 'destructive',
+        title: "Error",
+        description: err.message || "Failed to update game position",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  const refresh = async () => {
+    await fetchGames();
+  };
+
   return {
     games,
-    selectedGame,
-    setSelectedGame,
     loading,
     error,
     createGame,
     updateGame,
     deleteGame,
     updatePosition,
-    refresh: fetchGames
+    refresh
   };
 };

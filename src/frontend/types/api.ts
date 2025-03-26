@@ -17,7 +17,7 @@ export interface Member {
   role: string;
   smogon?: string;
   image: string;
-  achievements?: string[];
+  achievements: string[]; // Changed from optional to required
   join_date?: string;
   position?: number;
   created_at?: string;
@@ -39,7 +39,7 @@ export interface Game {
   description_en: string;
   description_it: string;
   position: number;
-  created_at?: string;
+  created_at: string; // Changed from optional to required
   updated_at?: string;
 }
 
@@ -56,6 +56,7 @@ export interface GameFormData {
   image_url: string;
   description_en: string;
   description_it: string;
+  position?: number; // Added position as optional
 }
 
 /**

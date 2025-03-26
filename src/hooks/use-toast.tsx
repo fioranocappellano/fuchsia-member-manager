@@ -1,21 +1,26 @@
 
 import * as React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useState } from "react"
 
 const TOAST_LIMIT = 5
 const TOAST_REMOVE_DELAY = 1000000
 
-type ToastActionElement = React.ReactElement<any, string | React.JSXElementConstructor<any>>
+export type ToastActionElement = React.ReactElement<any, string | React.JSXElementConstructor<any>>
 
-type ToastProps = {
-  id: string
+export type ToastProps = {
+  id?: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
   variant?: "default" | "destructive"
 }
 
-type Toast = ToastProps & {
+export type Toast = {
+  id: string
+  title?: React.ReactNode
+  description?: React.ReactNode
+  action?: ToastActionElement
+  variant?: "default" | "destructive"
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -106,8 +111,11 @@ function ToastProvider({ children }: { children: React.ReactNode }) {
 
 // Export toast function for convenience
 const toast = (props: ToastProps) => {
-  const { toast } = useToast()
-  toast(props)
+  const toastContext = useContext(ToastContext)
+  if (!toastContext) {
+    throw new Error("toast() must be used within a ToastProvider")
+  }
+  toastContext.addToast(props)
 }
 
 export { ToastProvider, useToast, toast }

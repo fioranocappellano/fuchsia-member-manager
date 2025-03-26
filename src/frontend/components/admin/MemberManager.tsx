@@ -19,25 +19,37 @@ const MemberManager = () => {
     updateMember,
     deleteMember,
     changePosition,
-    fetchMembers
+    refresh
   } = useMemberManager();
 
   // Handler for updating a member's position in the list
-  const handlePositionChange = async (index: number, direction: 'up' | 'down') => {
-    const member = members[index];
-    if (member?.id) {
-      await changePosition(member.id, direction);
+  const handlePositionChange = async (id: string, direction: 'up' | 'down') => {
+    await changePosition(id, direction);
+  };
+
+  // Form submission handler
+  const handleSave = async (memberData: Partial<Member>) => {
+    if (selectedMember && selectedMember.id) {
+      // Update existing member
+      await updateMember({
+        ...memberData,
+        id: selectedMember.id
+      });
+    } else {
+      // Create new member
+      await createMember(memberData as Omit<Member, "id" | "created_at" | "updated_at">);
     }
+    setSelectedMember(null);
   };
 
   return (
     <div className="space-y-6">
       <MemberManagerHeader 
-        dialogOpen={false} 
-        setDialogOpen={() => {}}
         reordering={false}
+        dialogOpen={false}
+        setDialogOpen={() => {}}
         toggleReordering={() => {}}
-        handleAddMember={() => {}}
+        handleAddMember={() => setSelectedMember({}  as Member)}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -49,7 +61,7 @@ const MemberManager = () => {
             reordering={false}
             onEdit={(member) => setSelectedMember(member)}
             onDelete={deleteMember}
-            onMoveItem={(id, direction) => changePosition(id, direction)}
+            onMoveItem={handlePositionChange}
           />
         </div>
         
@@ -57,18 +69,13 @@ const MemberManager = () => {
           <h2 className="text-lg font-medium">
             {selectedMember ? 'Edit Member' : 'Add New Member'}
           </h2>
-          <MemberEditForm 
-            member={selectedMember}
-            onSave={async (member) => {
-              if (selectedMember) {
-                await updateMember(member);
-              } else {
-                await createMember(member);
-              }
-              setSelectedMember(null);
-            }}
-            onCancel={() => setSelectedMember(null)}
-          />
+          {selectedMember && (
+            <MemberEditForm 
+              member={selectedMember} 
+              onSave={handleSave} 
+              onCancel={() => setSelectedMember(null)} 
+            />
+          )}
         </div>
       </div>
     </div>

@@ -1,110 +1,75 @@
-
 import React from 'react';
 import { Game } from '@/frontend/types/api';
-import { Card, CardContent } from '@/frontend/components/ui/card';
-import { Button } from '@/frontend/components/ui/button';
-import { Edit, Trash, ArrowUp, ArrowDown } from 'lucide-react';
-import { Skeleton } from '@/frontend/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowUp, ArrowDown, Edit, Trash } from 'lucide-react';
 
 interface GameListProps {
   games: Game[];
   loading: boolean;
-  error?: string | null;
-  onSelect: (game: Game) => void;
+  reordering: boolean;
+  onEdit: (game: Game) => void;
   onDelete: (id: string) => void;
-  onPositionChange: (index: number, direction: 'up' | 'down') => Promise<void>;
+  onMoveItem: (index: number, direction: 'up' | 'down') => Promise<void>;
 }
 
 const GameList: React.FC<GameListProps> = ({
   games,
   loading,
-  error,
-  onSelect,
+  reordering,
+  onEdit,
   onDelete,
-  onPositionChange
+  onMoveItem,
 }) => {
   if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="overflow-hidden">
-            <CardContent className="p-4">
-              <Skeleton className="h-6 w-2/3 mb-2" />
-              <Skeleton className="h-4 w-1/2 mb-1" />
-              <Skeleton className="h-4 w-full" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return <p>Loading games...</p>;
   }
 
-  if (error) {
-    return (
-      <div className="p-4 bg-red-100 border border-red-300 text-red-700 rounded-md">
-        {error}
-      </div>
-    );
-  }
-
-  if (games.length === 0) {
-    return (
-      <div className="p-4 bg-gray-100 border border-gray-300 text-gray-700 rounded-md">
-        No games available. Add a new game to get started.
-      </div>
-    );
+  if (!games || games.length === 0) {
+    return <p>No games found.</p>;
   }
 
   return (
     <div className="space-y-3">
       {games.map((game, index) => (
-        <Card key={game.id} className="overflow-hidden">
+        <Card key={game.id} className="bg-black/40 border-white/10">
           <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <h3 className="font-semibold">{game.tournament}</h3>
-                <p className="text-sm text-gray-500">
-                  {game.format} - {game.phase}
-                </p>
-                <p className="text-sm truncate">
-                  {typeof game.players === 'string' ? game.players : 'Multiple players'}
-                </p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold text-white">{game.tournament} - {game.phase}</h3>
+                <p className="text-sm text-gray-400">Format: {game.format}</p>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onSelect(game)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-red-500"
-                  onClick={() => onDelete(game.id)}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center space-x-2">
+                {reordering ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onMoveItem(index, 'up')}
+                      disabled={index === 0}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onMoveItem(index, 'down')}
+                      disabled={index === games.length - 1}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(game)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-red-500" onClick={() => onDelete(game.id)}>
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
-            </div>
-            <div className="mt-2 flex justify-end gap-1">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onPositionChange(index, 'up')}
-                disabled={index === 0}
-              >
-                <ArrowUp className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onPositionChange(index, 'down')}
-                disabled={index === games.length - 1}
-              >
-                <ArrowDown className="h-4 w-4" />
-              </Button>
             </div>
           </CardContent>
         </Card>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +10,7 @@ import { useToast } from "@/frontend/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Member } from "@/frontend/types/api";
 import { membersApi } from "@/backend/api";
+import { errorToast } from "@/utils/toast-helpers";
 
 const TopMembers = () => {
   const { translations } = useLanguage();
@@ -36,11 +36,7 @@ const TopMembers = () => {
       setError(err.message || "Failed to load members");
       setLoading(false);
       
-      toast({
-        title: "Error loading members",
-        description: err.message || "There was a problem loading the members",
-        variant: "destructive",
-      });
+      errorToast("Error loading members", err.message || "There was a problem loading the members");
     }
   };
 
