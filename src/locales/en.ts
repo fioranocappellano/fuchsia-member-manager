@@ -1,3 +1,4 @@
+
 export const en = {
   // Navbar
   home: "Home",
@@ -12,6 +13,10 @@ export const en = {
   italianCompetitiveSmogon: "Italian Competitive Pokemon",
   discoverMore: "Discover More",
   joinDiscord: "Follow on Twitter",
+  heroTitle: "Elite Pokémon Team",
+  heroDescription: "Join the best Italian competitive Pokémon players",
+  learnMore: "Learn More",
+  scrollForMore: "Scroll for more",
 
   // Community
   ourCommunity: "Our Community",
@@ -37,6 +42,17 @@ export const en = {
   resourcesSection: "Resources",
   contactsFounder: "Discord Contacts of Founders:",
   allRightsReserved: "All rights reserved.",
+  footerTagline: "The home of Italian competitive Pokémon players",
+  siteLinks: "Site Links",
+  usefulResources: "Useful Resources",
+  communityLinks: "Community Links",
+  footerDisclaimer: "Judgment Fleet is not affiliated with Nintendo or The Pokémon Company",
+
+  // Index Page
+  welcomeMessage: "Welcome to Judgment Fleet",
+  siteDescription: "Join the elite Italian competitive Pokémon community",
+  enterSite: "Enter Site",
+  teamBanner: "Italy's Elite Competitive Pokémon Team",
 
   // FAQ
   frequentlyAskedQuestions: "Frequently Asked Questions",

@@ -1,137 +1,112 @@
 
-import { Game } from "@/frontend/types/api";
-import { Button } from "@/frontend/components/ui/button";
-import { Edit, Trash2, ArrowUp, ArrowDown } from "lucide-react";
-import { Skeleton } from "@/frontend/components/ui/skeleton";
-import { normalizeImageUrl } from "@/frontend/utils/imageUtils";
+import { Button } from '@/frontend/components/ui/button';
+import { 
+  ChevronUp, ChevronDown, Edit, Trash2, AlertOctagon 
+} from 'lucide-react';
+import { Game } from '@/frontend/types/api';
+import { Skeleton } from '@/frontend/components/ui/skeleton';
 
 interface GameListProps {
   games: Game[];
   loading: boolean;
-  reordering: boolean;
-  onEdit: (game: Game) => void;
-  onDelete: (id: string) => void;
-  onMoveItem: (index: number, direction: "up" | "down") => void;
+  error: string | null;
+  onSelect: (game: Game) => void;
+  onDelete: (id: string) => Promise<void>;
+  onPositionChange: (index: number, direction: 'up' | 'down') => void;
 }
 
-const GameList: React.FC<GameListProps> = ({
-  games,
-  loading,
-  reordering,
-  onEdit,
+/**
+ * Component to display a list of games with controls for reordering, editing, and deleting
+ */
+const GameList = ({ 
+  games, 
+  loading, 
+  error,
+  onSelect, 
   onDelete,
-  onMoveItem
-}) => {
+  onPositionChange
+}: GameListProps) => {
   if (loading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-black/20 border border-white/10 rounded-lg p-6">
-            <div className="flex flex-col md:flex-row gap-6">
-              <Skeleton className="h-32 w-56 rounded-md" />
-              <div className="flex-1 space-y-3">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-4 w-full" />
-              </div>
-            </div>
-          </div>
+      <div className="space-y-3">
+        {[1, 2, 3].map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full" />
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 border border-red-300 bg-red-50 text-red-800 rounded-md flex items-center gap-2">
+        <AlertOctagon className="h-5 w-5" />
+        <p>{error}</p>
       </div>
     );
   }
 
   if (games.length === 0) {
     return (
-      <div className="text-center py-12 bg-black/20 border border-white/10 rounded-lg">
-        <h3 className="text-xl font-medium text-gray-400">No games added yet</h3>
-        <p className="text-gray-500 mt-1">Click "Add Game" to create your first game showcase</p>
+      <div className="p-4 border border-gray-200 rounded-md text-center text-gray-500">
+        No games found. Add your first game!
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {games.map((game, index) => (
         <div 
           key={game.id} 
-          className="bg-black/20 border border-white/10 rounded-lg p-4 md:p-6 transition-all hover:border-white/20"
+          className="p-3 border border-gray-200 rounded-md flex items-center justify-between gap-2 bg-gray-50 hover:bg-gray-100 transition-colors"
         >
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="md:w-56 h-32 overflow-hidden rounded-md border border-white/10">
-              <img 
-                src={normalizeImageUrl(game.image_url)} 
-                alt={game.tournament} 
-                className="w-full h-full object-cover object-center"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "/placeholder.svg";
-                }}
-              />
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium truncate">{game.tournament}</h3>
+            <p className="text-sm text-gray-500 truncate">
+              {game.format} - {game.players.join(' vs ')}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <div className="flex flex-col">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7" 
+                onClick={() => onPositionChange(index, 'up')}
+                disabled={index === 0}
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7" 
+                onClick={() => onPositionChange(index, 'down')}
+                disabled={index === games.length - 1}
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
             </div>
-            
-            <div className="flex-1">
-              <div className="flex flex-wrap gap-2 mb-2">
-                <span className="px-2 py-1 bg-[#D946EF]/20 text-[#D946EF] rounded-full text-xs font-medium">
-                  {game.format}
-                </span>
-                <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
-                  {game.tournament}
-                </span>
-                <span className="px-2 py-1 bg-gray-500/20 text-gray-300 rounded-full text-xs font-medium">
-                  {game.phase}
-                </span>
-              </div>
-              
-              <h3 className="text-lg font-medium text-white">{game.players}</h3>
-              
-              <p className="text-gray-400 mt-1 line-clamp-2 text-sm">
-                {game.description_en}
-              </p>
-            </div>
-            
-            <div className="flex md:flex-col justify-end gap-2 mt-4 md:mt-0">
-              {reordering ? (
-                <>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => onMoveItem(index, "up")}
-                    disabled={index === 0}
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => onMoveItem(index, "down")}
-                    disabled={index === games.length - 1}
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => onEdit(game)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    className="h-8 w-8 border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
-                    onClick={() => onDelete(game.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => onSelect(game)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              onClick={() => {
+                if (confirm('Are you sure you want to delete this game?')) {
+                  onDelete(game.id);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       ))}

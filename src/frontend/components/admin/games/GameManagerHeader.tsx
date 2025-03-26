@@ -1,54 +1,29 @@
 
-import { useState } from "react";
-import { Button } from "@/frontend/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Plus, ListRestart } from "lucide-react";
-import AddGameForm from "@/components/admin/forms/AddGameForm";
+import { Button } from '@/frontend/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 interface GameManagerHeaderProps {
-  dialogOpen: boolean;
-  setDialogOpen: (open: boolean) => void;
-  reordering: boolean;
-  toggleReordering: () => void;
-  handleAddGame: () => void;
+  onRefresh: () => void;
+  loading: boolean;
 }
 
-const GameManagerHeader: React.FC<GameManagerHeaderProps> = ({
-  dialogOpen,
-  setDialogOpen,
-  reordering,
-  toggleReordering,
-  handleAddGame
-}) => {
+/**
+ * Header component for the GameManager with refresh button
+ */
+const GameManagerHeader = ({ onRefresh, loading }: GameManagerHeaderProps) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Best Games Management</h1>
-        <p className="text-gray-400">Add, edit, delete, and reorder the best games showcase</p>
-      </div>
-      
-      <div className="flex gap-2">
-        <Button 
-          onClick={toggleReordering}
-          variant={reordering ? "default" : "outline"}
-          className={reordering ? "bg-green-600 hover:bg-green-700" : ""}
-        >
-          <ListRestart className="mr-2 h-4 w-4" />
-          {reordering ? "Done Reordering" : "Reorder Games"}
-        </Button>
-        
-        <Button onClick={() => setDialogOpen(true)} className="bg-[#D946EF] hover:bg-[#D946EF]/90">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Game
-        </Button>
-      </div>
-      
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-jf-gray border-white/10 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
-          <h2 className="text-xl font-bold mb-4">Add New Game</h2>
-          <AddGameForm onAddGame={handleAddGame} />
-        </DialogContent>
-      </Dialog>
+    <div className="flex justify-between items-center">
+      <h1 className="text-2xl font-bold">Manage Games</h1>
+      <Button 
+        variant="outline"
+        size="sm"
+        onClick={onRefresh}
+        disabled={loading}
+        className="flex items-center gap-2"
+      >
+        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        Refresh
+      </Button>
     </div>
   );
 };

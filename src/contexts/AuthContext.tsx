@@ -1,165 +1,215 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "../integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
-import { useToast } from "@/components/ui/use-toast";
-import { authApi } from "@/services/api";
+import { createContext, useState, useEffect, useContext, ReactNode } from "react";
+import { User } from "@/frontend/types/api";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/backend/api";
 
-type AuthContextType = {
-  session: Session | null;
+interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
-  loading: boolean;
+  isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  checkIsAdmin: (userId: string) => Promise<boolean>;
-};
+  resetPassword: (email: string) => Promise<boolean>;
+  updatePassword: (password: string) => Promise<boolean>;
+}
 
 const AuthContext = createContext<AuthContextType>({
-  session: null,
   user: null,
   isAdmin: false,
-  loading: true,
+  isLoading: true,
+  signIn: async () => {},
   signOut: async () => {},
-  checkIsAdmin: async () => false,
+  resetPassword: async () => false,
+  updatePassword: async () => false,
 });
 
-export const useAuth = () => useContext(AuthContext);
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Check if user is admin with caching to avoid multiple calls
-  const checkIsAdmin = async (userId: string): Promise<boolean> => {
-    return await authApi.checkIsAdmin(userId);
-  };
-
-  // Initialize auth state - refactored to avoid race conditions
+  // Check current auth state on mount and setup auth listener
   useEffect(() => {
-    console.log("Setting up auth state...");
-    
-    // Set up auth state listener first to avoid missing events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log("Auth state change detected:", event);
-
-        // Handle logout or session expiry
-        if (!currentSession) {
-          setUser(null);
-          setSession(null);
-          setIsAdmin(false);
-          setLoading(false);
-          console.log("Auth state reset: no session");
-          return;
-        }
-        
-        // Update session state
-        setSession(currentSession);
-        setUser(currentSession.user);
-        
-        // Reset loading state after update
-        setLoading(false);
-      }
-    );
-    
-    // Then get current session
-    const initAuth = async () => {
+    const fetchUser = async () => {
       try {
-        console.log("Initializing auth...");
+        setIsLoading(true);
         
-        const { data: { session: currentSession }, error } = await authApi.getSession();
+        // Check current session
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error("Error getting session:", error);
-          setLoading(false);
-          return;
+        if (session) {
+          const { user: authUser } = session;
+          
+          if (authUser) {
+            // Check if user is admin
+            const adminStatus = await authApi.isAdmin();
+            
+            setUser({
+              id: authUser.id,
+              email: authUser.email || '',
+              role: adminStatus ? 'admin' : 'user',
+            });
+            
+            setIsAdmin(adminStatus);
+          }
         }
-        
-        if (!currentSession) {
-          setUser(null);
-          setSession(null);
-          setIsAdmin(false);
-          setLoading(false);
-          console.log("Auth state reset: no session");
-          return;
-        }
-        
-        // Update session state
-        setSession(currentSession);
-        setUser(currentSession.user);
-      } catch (error: any) {
-        console.error("Auth initialization error:", error);
-        toast({
-          title: "Errore di autenticazione",
-          description: "Si è verificato un problema durante l'inizializzazione dell'autenticazione.",
-          variant: "destructive",
-        });
+      } catch (error) {
+        console.error('Error fetching user:', error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-    
-    initAuth();
-    
+
+    fetchUser();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const adminStatus = await authApi.isAdmin();
+          
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            role: adminStatus ? 'admin' : 'user',
+          });
+          
+          setIsAdmin(adminStatus);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setIsAdmin(false);
+        }
+      }
+    );
+
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, []);
 
-  // Check admin status separately when user ID changes to avoid unnecessary calls
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (user) {
-        try {
-          const adminStatus = await checkIsAdmin(user.id);
-          setIsAdmin(adminStatus);
-          console.log("Admin status updated:", { 
-            userId: user.id, 
-            isAdmin: adminStatus 
-          });
-        } catch (error) {
-          console.error("Error checking admin status:", error);
-          setIsAdmin(false);
-        }
+  // Sign in user
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { user: authUser } = await authApi.signIn(email, password);
+      
+      if (authUser) {
+        const adminStatus = await authApi.isAdmin();
+        
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          role: adminStatus ? 'admin' : 'user',
+        });
+        
+        setIsAdmin(adminStatus);
+        
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully signed in.',
+        });
       }
-    };
+    } catch (error: any) {
+      console.error('Error signing in:', error);
+      toast({
+        title: 'Sign in failed',
+        description: error.message || 'Invalid email or password',
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    checkAdminStatus();
-  }, [user?.id]); // Only run when user ID changes
-
-  // Sign out function
+  // Sign out user
   const signOut = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       await authApi.signOut();
-      
-      // Clear state immediately
       setUser(null);
-      setSession(null);
       setIsAdmin(false);
-      
       toast({
-        title: "Logout effettuato",
-        description: "Hai effettuato il logout con successo."
+        title: 'Signed out',
+        description: 'You have been signed out successfully.',
       });
     } catch (error: any) {
-      console.error("Sign out error:", error);
+      console.error('Error signing out:', error);
       toast({
-        title: "Errore durante il logout",
-        description: error.message || "Si è verificato un problema durante il logout",
-        variant: "destructive",
+        title: 'Sign out failed',
+        description: error.message || 'There was a problem signing out',
+        variant: 'destructive',
       });
+      throw error;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  // Reset password
+  const resetPassword = async (email: string) => {
+    try {
+      await authApi.resetPassword(email);
+      toast({
+        title: 'Password reset email sent',
+        description: 'Check your email for a password reset link.',
+      });
+      return true;
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      toast({
+        title: 'Password reset failed',
+        description: error.message || 'There was a problem resetting your password',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  // Update password
+  const updatePassword = async (password: string) => {
+    try {
+      await authApi.updatePassword(password);
+      toast({
+        title: 'Password updated',
+        description: 'Your password has been updated successfully.',
+      });
+      return true;
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      toast({
+        title: 'Password update failed',
+        description: error.message || 'There was a problem updating your password',
+        variant: 'destructive',
+      });
+      return false;
     }
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, isAdmin, loading, signOut, checkIsAdmin }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAdmin,
+        isLoading,
+        signIn,
+        signOut,
+        resetPassword,
+        updatePassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

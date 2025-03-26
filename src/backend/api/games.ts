@@ -1,138 +1,151 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { Game } from "@/frontend/types/api";
+import { supabase } from '@/integrations/supabase/client';
+import { Game } from '@/frontend/types/api';
 
 /**
- * Recupera tutti i giochi ordinati per posizione
- * @returns Lista di tutti i giochi ordinati per posizione
+ * Games API module for managing game data
  */
-export const getAll = async (): Promise<Game[]> => {
-  const { data, error } = await supabase
-    .from("best_games")
-    .select("*")
-    .order("position", { ascending: true });
-
-  if (error) {
-    console.error("Error fetching games:", error);
-    throw error;
-  }
-
-  return data || [];
-};
-
-/**
- * Recupera un gioco specifico tramite ID
- * @param id ID del gioco da recuperare
- * @returns Dettagli del gioco richiesto
- */
-export const getById = async (id: string): Promise<Game> => {
-  const { data, error } = await supabase
-    .from("best_games")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) {
-    console.error(`Error fetching game ${id}:`, error);
-    throw error;
-  }
-
-  return data;
-};
-
-/**
- * Crea un nuovo gioco
- * @param game Dati del nuovo gioco da creare
- * @returns Il gioco creato con l'ID generato
- */
-export const create = async (game: Omit<Game, "id" | "created_at" | "updated_at">): Promise<Game> => {
-  const { data, error } = await supabase
-    .from("best_games")
-    .insert(game)
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Error creating game:", error);
-    throw error;
-  }
-
-  return data;
-};
-
-/**
- * Aggiorna un gioco esistente
- * @param id ID del gioco da aggiornare
- * @param game Dati aggiornati del gioco
- * @returns Il gioco aggiornato
- */
-export const update = async (id: string, game: Partial<Game>): Promise<Game> => {
-  const { data, error } = await supabase
-    .from("best_games")
-    .update(game)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error(`Error updating game ${id}:`, error);
-    throw error;
-  }
-
-  return data;
-};
-
-/**
- * Elimina un gioco
- * @param id ID del gioco da eliminare
- * @returns true se l'eliminazione è avvenuta con successo
- */
-export const delete_ = async (id: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from("best_games")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error(`Error deleting game ${id}:`, error);
-    throw error;
-  }
-
-  return true;
-};
-
-/**
- * Scambia la posizione di due giochi per il riordinamento
- * @param game1 Primo gioco da scambiare
- * @param game2 Secondo gioco da scambiare
- * @returns true se lo scambio è avvenuto con successo
- */
-export const swapPositions = async (game1: Game, game2: Game): Promise<boolean> => {
-  try {
-    // Aggiorna il primo gioco
-    await supabase
-      .from("best_games")
-      .update({ position: game2.position })
-      .eq("id", game1.id);
-
-    // Aggiorna il secondo gioco
-    await supabase
-      .from("best_games")
-      .update({ position: game1.position })
-      .eq("id", game2.id);
-
-    return true;
-  } catch (error) {
-    console.error("Error swapping game positions:", error);
-    throw error;
-  }
-};
-
 export const gamesApi = {
-  getAll,
-  getById,
-  create,
-  update,
-  delete: delete_,
-  swapPositions
+  /**
+   * Retrieve all games
+   */
+  getAll: async (): Promise<Game[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('best_games')
+        .select('*')
+        .order('position', { ascending: true });
+
+      if (error) throw error;
+      
+      return data as Game[];
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get a single game by ID
+   */
+  getById: async (id: string): Promise<Game> => {
+    try {
+      const { data, error } = await supabase
+        .from('best_games')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
+      return data as Game;
+    } catch (error) {
+      console.error(`Error fetching game with ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Create a new game
+   */
+  create: async (gameData: Omit<Game, 'id' | 'created_at'>): Promise<Game> => {
+    try {
+      const { data, error } = await supabase
+        .from('best_games')
+        .insert(gameData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      return data as Game;
+    } catch (error) {
+      console.error('Error creating game:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update an existing game
+   */
+  update: async (id: string, gameData: Partial<Game>): Promise<Game> => {
+    try {
+      const { data, error } = await supabase
+        .from('best_games')
+        .update(gameData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      return data as Game;
+    } catch (error) {
+      console.error(`Error updating game with ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Delete a game
+   */
+  delete: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('best_games')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error(`Error deleting game with ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update game position for reordering
+   */
+  updatePosition: async (id: string, direction: 'up' | 'down'): Promise<void> => {
+    try {
+      // Get all games to determine current positions
+      const { data: games } = await supabase
+        .from('best_games')
+        .select('id, position')
+        .order('position', { ascending: true });
+
+      if (!games) return;
+
+      // Find the current game and its index
+      const gameIndex = games.findIndex(game => game.id === id);
+      if (gameIndex === -1) return;
+
+      // Determine target index based on direction
+      const targetIndex = direction === 'up' 
+        ? Math.max(0, gameIndex - 1) 
+        : Math.min(games.length - 1, gameIndex + 1);
+
+      // If already at extremes, do nothing
+      if (targetIndex === gameIndex) return;
+
+      // Get the current and target games
+      const currentGame = games[gameIndex];
+      const targetGame = games[targetIndex];
+
+      // Swap positions
+      await supabase
+        .from('best_games')
+        .update({ position: targetGame.position })
+        .eq('id', currentGame.id);
+
+      await supabase
+        .from('best_games')
+        .update({ position: currentGame.position })
+        .eq('id', targetGame.id);
+
+    } catch (error) {
+      console.error(`Error updating game position for ID ${id}:`, error);
+      throw error;
+    }
+  }
 };

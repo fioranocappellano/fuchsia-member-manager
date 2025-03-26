@@ -1,172 +1,158 @@
 
-# Judgment Fleet Website
+# Judgment Fleet - Web Application
 
-This repository contains the code for the Judgment Fleet website, an elite Pokémon competitive team. The codebase is organized with a clear separation between frontend and backend components, making it maintainable and easy to understand.
+This is the official web application for Judgment Fleet, an exclusive hub for Italian competitive Pokémon players.
 
-## Project Structure
+## Project Architecture
 
-The project is organized into two main directories:
+This project follows a clear separation between the frontend and backend parts of the application:
 
 ```
 src/
-├── frontend/           # Frontend components, hooks, contexts, and pages
-│   ├── components/     # UI components
-│   ├── contexts/       # React context providers
-│   ├── hooks/          # Custom React hooks
-│   ├── pages/          # Page components
-│   ├── types/          # TypeScript type definitions
-│   └── utils/          # Utility functions
-├── backend/           # Backend API and services
-│   ├── api/           # API endpoints
-│   └── services/      # Backend services
-└── integrations/      # Third-party integrations
-    └── supabase/      # Supabase client and types
+├── frontend/     # Frontend-specific code
+├── backend/      # Backend-specific code
+├── components/   # Shared components
+├── contexts/     # Application contexts
+├── hooks/        # Shared custom hooks
+├── lib/          # Utility functions and helpers
+├── locales/      # Internationalization resources
+├── pages/        # Page components
+└── integrations/ # Integration with external services
 ```
 
-## Architecture Overview
+### Frontend-Backend Separation
 
-This application follows a clean architecture pattern with clear separation of concerns:
+The application follows a clean separation of concerns:
 
-1. **Frontend Layer**: Contains all UI components, pages, and client-side logic
-2. **Backend Layer**: Handles data fetching, manipulation, and business logic
-3. **Integration Layer**: Manages connections to external services (Supabase in this case)
+- **Frontend**: Handles the UI, user interactions, and presentation logic.
+- **Backend**: Manages data operations, API calls, and business logic.
 
-## Frontend Components
+## Key Components and Features
 
-### Core Components
+### 1. Frontend Layer
 
-- **Navbar**: Main navigation component that allows users to navigate between different sections of the site
-- **Hero**: The main landing section of the homepage
-- **Community**: Section showcasing the community aspects of Judgment Fleet
-- **TopMembers**: Component displaying the team's top members with their achievements
-- **PlayerCard**: Individual card displaying a team member's information
-- **LanguageSelector**: Component for switching between Italian and English languages
-- **Footer**: Footer component with links and copyright information
+Located in `src/frontend/`:
 
-### Admin Components
+- **Pages**: Individual application pages
+- **Components**: UI components specific to the frontend
+- **Contexts**: Context providers for frontend state management
+- **Hooks**: Custom hooks for frontend logic
 
-- **GameManager**: Component for managing best games with CRUD operations
-- **MemberManager**: Component for managing team members with CRUD operations
-- **FAQManager**: Component for managing FAQ entries with CRUD operations
+### 2. Backend Layer
 
-### UI Components
+Located in `src/backend/`:
 
-Various UI components from the shadcn/ui library, customized for the Judgment Fleet design system.
+- **API**: API client code for interfacing with the backend services
+- **Services**: Business logic and data processing
+- **Models**: Data models and type definitions
+- **Utils**: Backend-specific utility functions
 
-## Backend API
+### 3. Shared Resources
 
-The backend layer is organized into API modules that handle specific data entities:
+Resources shared between frontend and backend:
 
-### Members API
+- **Components**: Reusable UI components
+- **Contexts**: Application-wide state management
+- **Hooks**: Shared custom hooks
+- **Utils**: Utility functions used by both frontend and backend
 
-The `membersApi` object provides the following functions:
+## File Structure Overview
 
-- `getAll()`: Fetches all team members from the database
-- `getById(id)`: Fetches a specific member by ID
-- `create(member)`: Creates a new team member
-- `update(id, member)`: Updates an existing team member
-- `delete(id)`: Deletes a team member
-- `swapPositions(member1, member2)`: Swaps the positions of two members for reordering
+### API Module (`src/backend/api/`)
 
-### Games API
+The API module handles data operations and communicates with the Supabase backend.
 
-The `gamesApi` object provides the following functions:
+| File | Description |
+|------|-------------|
+| `auth.ts` | Authentication operations (login, logout, password reset) |
+| `games.ts` | Game management operations (CRUD for games) |
+| `members.ts` | Member management operations (CRUD for team members) |
+| `faqs.ts` | FAQ management operations |
+| `index.ts` | API exports |
 
-- `getAll()`: Fetches all best games from the database
-- `getById(id)`: Fetches a specific game by ID
-- `create(game)`: Creates a new best game
-- `update(id, game)`: Updates an existing best game
-- `delete(id)`: Deletes a best game
-- `swapPositions(game1, game2)`: Swaps the positions of two games for reordering
+### Frontend Pages (`src/frontend/pages/`)
 
-### FAQs API
+| File | Description |
+|------|-------------|
+| `Index.tsx` | Main landing page of the application |
 
-The `faqsApi` object provides similar CRUD operations for FAQ entries.
+### Components (`src/frontend/components/`)
 
-### Auth API
+| Component | Description |
+|-----------|-------------|
+| `JudgmentFleetBanner.tsx` | Banner component with team name and description |
+| `Hero.tsx` | Hero section of the homepage |
+| `Community.tsx` | Community section of the homepage |
+| `TopMembers.tsx` | Section displaying top team members |
+| `Footer.tsx` | Footer component with links and information |
+| `PlayerCard.tsx` | Card component for displaying player information |
+| `ui/*` | UI components based on shadcn/ui library |
 
-The `authApi` object handles authentication and user management:
+### Contexts (`src/contexts/`)
 
-- `signIn(email, password)`: Authenticates a user
-- `signOut()`: Signs out the current user
-- `checkIsAdmin(userId)`: Checks if a user has admin privileges
-- `resetPassword(email)`: Initiates a password reset process
-- `updatePassword(newPassword)`: Updates a user's password
-- `getCurrentUser()`: Retrieves the currently authenticated user
+| Context | Description |
+|---------|-------------|
+| `LanguageContext.tsx` | Handles internationalization and language switching |
+| `AuthContext.tsx` | Manages user authentication state |
 
-## Contexts
+### Frontend Hooks (`src/frontend/hooks/`)
 
-### LanguageContext
+| Hook | Description |
+|------|-------------|
+| `use-toast.ts` | Hook for displaying toast notifications |
+| `useMemberManager.tsx` | Hook for managing members in the admin panel |
+| `useGameManager.tsx` | Hook for managing games in the admin panel |
+| `usePasswordReset.tsx` | Hook for password reset functionality |
 
-Provides internationalization capabilities:
+## Data Flow
 
-- `locale`: Current language (it/en)
-- `translations`: Text translations for the current language
-- `setLocale(locale)`: Function to change the current language
+1. **User Interaction**: User interacts with a frontend component
+2. **Frontend Logic**: Frontend hook or component calls backend API
+3. **API Call**: Backend API module makes request to external service (Supabase)
+4. **Data Processing**: Data is processed by backend service
+5. **State Update**: Frontend state is updated based on API response
+6. **UI Update**: UI is updated to reflect the new state
 
-### AuthContext
+## Backend Integration
 
-Manages user authentication state:
+The application uses Supabase as the backend service, with the following tables:
 
-- `user`: Current authenticated user or null
-- `isAdmin`: Boolean indicating if the current user has admin privileges
-- `loading`: Loading state for authentication
-- `signIn(email, password)`: Function to sign in a user
-- `signOut()`: Function to sign out the current user
+- `members`: Team member information
+- `best_games`: Notable games played by team members
+- `faqs`: Frequently asked questions
+- `footer_resources`: Resources displayed in the footer
+- `admins`: Administrator accounts
 
-## Hooks
+## Authentication Flow
 
-### use-toast
+1. User enters credentials in the Auth page
+2. Auth API sends credentials to Supabase
+3. Upon successful authentication, user state is updated
+4. Admin check is performed to determine user role
+5. User is redirected based on their role
 
-Custom hook for displaying toast notifications. Used throughout the application to provide user feedback.
+## Internationalization
 
-### useGameManager
+The application supports multiple languages with a context-based approach:
 
-Manages the state and operations for the game management interface:
+- Language files in `src/locales/` (en.ts, it.ts)
+- LanguageContext manages current language
+- Components use translations via useLanguage hook
 
-- Fetching, creating, updating, and deleting games
-- Handling reordering of games
-- Managing UI state (loading, dialog open/close, etc.)
+## Building and Deployment
 
-### useMemberManager
+1. Build frontend and backend together
+2. Deploy to hosting provider
+3. Connect to Supabase backend services
 
-Similar to useGameManager but for team members.
+## Future Extensions
 
-### useFAQManager
+- User profiles for team members
+- Event management
+- Tournament tracking
+- Chat functionality
 
-Similar to useGameManager but for FAQ entries.
+---
 
-## Database Schema
+This architecture allows for clean separation of concerns while maintaining a consistent development experience across the application.
 
-The application uses Supabase as its backend database with the following main tables:
-
-- **members**: Stores team member information
-- **best_games**: Stores the best games showcase
-- **faqs**: Stores FAQ entries
-- **admins**: Stores admin user information
-
-## Getting Started
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Start the development server: `npm run dev`
-
-## Environment Variables
-
-The application uses the following environment variables:
-
-- `VITE_SUPABASE_URL`: Supabase project URL
-- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous key for client-side operations
-
-## Deployment
-
-The application is deployed using Netlify, with continuous deployment set up from the main branch.
-
-## Credits
-
-- **UI Framework**: React with Vite
-- **Styling**: Tailwind CSS with custom theme
-- **Backend**: Supabase for authentication, database, and storage
-- **Icons**: Lucide React
-- **UI Components**: shadcn/ui
-- **Animations**: Framer Motion
