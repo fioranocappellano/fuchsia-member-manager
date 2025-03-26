@@ -34,7 +34,7 @@ const Index = () => {
         <title>Judgment Fleet | Elite Pokémon Team</title>
         <meta 
           name="description" 
-          content={translations.siteDescription} 
+          content="Il meglio del Competitivo Pokemon Italiano."
         />
       </Helmet>
       

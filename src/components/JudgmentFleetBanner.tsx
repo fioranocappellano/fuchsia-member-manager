@@ -1,5 +1,5 @@
 
-import { useLanguage } from "@/frontend/contexts/LanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const JudgmentFleetBanner = () => {
   const { translations } = useLanguage();
