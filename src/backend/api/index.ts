@@ -4,7 +4,7 @@ import { gamesApi } from "./games";
 import { faqsApi } from "./faqs";
 import { authApi } from "./auth";
 
-// Esporta tutte le API come un unico oggetto
+// Export all APIs as a single object
 export {
   membersApi,
   gamesApi,

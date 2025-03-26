@@ -1,3 +1,3 @@
 
-// Re-export from the hooks directory
+// Re-export from the shadcn/ui hooks directory
 export { useToast, toast } from "@/hooks/use-toast";

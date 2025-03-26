@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { FAQ, NewFAQ } from "./types";
+import { FAQ, NewFAQ } from "@/frontend/types/api";
+import { faqsApi } from "@/backend/api";
 import { moveItemUp, moveItemDown } from "@/lib/utils";
 
 export const useFAQManager = () => {
@@ -23,12 +23,7 @@ export const useFAQManager = () => {
   const fetchFAQs = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("faqs")
-        .select("*")
-        .order("position", { ascending: true });
-
-      if (error) throw error;
+      const data = await faqsApi.getAll();
       setFaqs(data || []);
     } catch (error: any) {
       console.error("Error fetching FAQs:", error);
@@ -44,22 +39,6 @@ export const useFAQManager = () => {
 
   useEffect(() => {
     fetchFAQs();
-
-    // Set up real-time listener
-    const subscription = supabase
-      .channel("faqs-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "faqs" },
-        () => {
-          fetchFAQs();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const handleAddFaq = async () => {
@@ -85,9 +64,7 @@ export const useFAQManager = () => {
         position: nextPosition
       };
 
-      const { error } = await supabase.from("faqs").insert([faqToAdd]);
-
-      if (error) throw error;
+      await faqsApi.create(faqToAdd);
 
       toast({
         title: "Success",
@@ -124,19 +101,14 @@ export const useFAQManager = () => {
       if (!editingFaq) return;
       
       // Keep the original position when updating
-      const { error } = await supabase
-        .from("faqs")
-        .update({
-          question_it: editingFaq.question_it,
-          question_en: editingFaq.question_en,
-          answer_it: editingFaq.answer_it,
-          answer_en: editingFaq.answer_en,
-          is_active: editingFaq.is_active,
-          // Don't update position to maintain order
-        })
-        .eq("id", editingFaq.id);
-
-      if (error) throw error;
+      await faqsApi.update(editingFaq.id, {
+        question_it: editingFaq.question_it,
+        question_en: editingFaq.question_en,
+        answer_it: editingFaq.answer_it,
+        answer_en: editingFaq.answer_en,
+        is_active: editingFaq.is_active,
+        // Don't update position to maintain order
+      });
 
       toast({
         title: "Success",
@@ -160,9 +132,7 @@ export const useFAQManager = () => {
 
   const handleDeleteFaq = async (id: string) => {
     try {
-      const { error } = await supabase.from("faqs").delete().eq("id", id);
-
-      if (error) throw error;
+      await faqsApi.delete(id);
 
       toast({
         title: "Success",
@@ -182,12 +152,7 @@ export const useFAQManager = () => {
 
   const handleToggleActive = async (id: string, is_active: boolean) => {
     try {
-      const { error } = await supabase
-        .from("faqs")
-        .update({ is_active: !is_active })
-        .eq("id", id);
-
-      if (error) throw error;
+      await faqsApi.update(id, { is_active: !is_active });
 
       toast({
         title: "Success",
@@ -213,10 +178,7 @@ export const useFAQManager = () => {
       const faqToUpdate = updatedFaqs[index - 1];
       const prevFaq = updatedFaqs[index];
       
-      await Promise.all([
-        supabase.from("faqs").update({ position: faqToUpdate.position }).eq("id", faqToUpdate.id),
-        supabase.from("faqs").update({ position: prevFaq.position }).eq("id", prevFaq.id)
-      ]);
+      await faqsApi.swapPositions(faqToUpdate, prevFaq);
       
       fetchFAQs();
     } catch (error: any) {
@@ -237,10 +199,7 @@ export const useFAQManager = () => {
       const faqToUpdate = updatedFaqs[index + 1];
       const nextFaq = updatedFaqs[index];
       
-      await Promise.all([
-        supabase.from("faqs").update({ position: faqToUpdate.position }).eq("id", faqToUpdate.id),
-        supabase.from("faqs").update({ position: nextFaq.position }).eq("id", nextFaq.id)
-      ]);
+      await faqsApi.swapPositions(faqToUpdate, nextFaq);
       
       fetchFAQs();
     } catch (error: any) {
@@ -279,7 +238,7 @@ export const useFAQManager = () => {
     setDialogOpen,
     setNewFaq: handleSetNewFaq,
     setEditingFaq: handleSetEditingFaq,
-    initEditingFaq: (faq: FAQ) => setEditingFaq(faq),
+    initEditingFaq: (faq: FAQ | null) => setEditingFaq(faq),
     fetchFAQs,
     handleAddFaq,
     handleEditFaq,

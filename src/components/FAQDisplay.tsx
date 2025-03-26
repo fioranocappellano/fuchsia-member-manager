@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from "../contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { faqsApi } from "@/backend/api";
+import { FAQ } from "@/frontend/types/api";
 import {
   Accordion,
   AccordionContent,
@@ -12,22 +13,13 @@ import {
 import { motion } from "framer-motion";
 import { HelpCircle } from "lucide-react";
 
-interface FAQItem {
-  id: string;
-  question_it: string;
-  question_en: string;
-  answer_it: string;
-  answer_en: string;
-  position: number;
-}
-
 interface FAQDisplayProps {
   faqItems?: { question: string; answer: string; }[];
 }
 
 const FAQDisplay: React.FC<FAQDisplayProps> = () => {
   const { translations, locale } = useLanguage();
-  const [faqItems, setFaqItems] = useState<FAQItem[]>([]);
+  const [faqItems, setFaqItems] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,14 +29,7 @@ const FAQDisplay: React.FC<FAQDisplayProps> = () => {
         setLoading(true);
         setError(null);
         
-        const { data, error } = await supabase
-          .from('faqs')
-          .select('*')
-          .eq('is_active', true)
-          .order('position', { ascending: true });
-        
-        if (error) throw error;
-        
+        const data = await faqsApi.getAllActive();
         setFaqItems(data || []);
       } catch (err: any) {
         console.error("Error fetching FAQs:", err);
@@ -55,23 +40,6 @@ const FAQDisplay: React.FC<FAQDisplayProps> = () => {
     };
 
     fetchFAQs();
-    
-    // Set up real-time subscription for changes
-    const subscription = supabase
-      .channel('faqs-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'faqs',
-      }, () => {
-        console.log('FAQs data changed, refreshing...');
-        fetchFAQs();
-      })
-      .subscribe();
-    
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const renderAnswer = (answer: string) => {

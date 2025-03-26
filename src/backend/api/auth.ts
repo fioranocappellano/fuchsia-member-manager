@@ -1,14 +1,34 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@/frontend/types/api";
 
 /**
- * Authentication API module for handling user authentication
+ * API methods for authentication
  */
 export const authApi = {
   /**
-   * Sign in with email and password
+   * Sign up a new user
    */
-  signIn: async (email: string, password: string) => {
+  signUp: async (email: string, password: string): Promise<{ user: User | null; error: any }> => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      return { user: data.user as User, error: null };
+    } catch (error) {
+      console.error("Error signing up:", error);
+      return { user: null, error };
+    }
+  },
+
+  /**
+   * Sign in a user
+   */
+  signIn: async (email: string, password: string): Promise<{ user: User | null; error: any }> => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -16,82 +36,92 @@ export const authApi = {
       });
 
       if (error) throw error;
-      return data;
+
+      return { user: data.user as User, error: null };
     } catch (error) {
-      console.error('Error signing in:', error);
-      throw error;
+      console.error("Error signing in:", error);
+      return { user: null, error };
     }
   },
 
   /**
    * Sign out the current user
    */
-  signOut: async () => {
+  signOut: async (): Promise<{ error: any }> => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      return { error: null };
     } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
+      console.error("Error signing out:", error);
+      return { error };
     }
   },
 
   /**
-   * Check if user is admin
+   * Get the current authenticated user
    */
-  isAdmin: async () => {
+  getCurrentUser: async (): Promise<{ user: User | null; error: any }> => {
     try {
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return false;
+      const { data, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      return { user: data.user as User, error: null };
+    } catch (error) {
+      console.error("Error getting current user:", error);
+      return { user: null, error };
+    }
+  },
 
-      // Check if user is in admins table
+  /**
+   * Check if a user is an admin
+   */
+  checkIsAdmin: async (userId: string): Promise<{ isAdmin: boolean; error: any }> => {
+    try {
       const { data, error } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('email', session.user.email)
-        .eq('is_active', true)
+        .from("admins")
+        .select("*")
+        .eq("id", userId)
+        .eq("is_active", true)
         .single();
 
-      if (error) return false;
-      return !!data;
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 is the error code for no rows returned
+        throw error;
+      }
+
+      return { isAdmin: !!data, error: null };
     } catch (error) {
-      console.error('Error checking admin status:', error);
-      return false;
+      console.error("Error checking admin status:", error);
+      return { isAdmin: false, error };
     }
   },
 
   /**
-   * Reset password
+   * Reset password for email
    */
-  resetPassword: async (email: string) => {
+  resetPassword: async (email: string, redirectTo?: string): Promise<{ error: any }> => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
+      const options = redirectTo ? { redirectTo } : undefined;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, options);
       if (error) throw error;
-      return true;
+      return { error: null };
     } catch (error) {
-      console.error('Error resetting password:', error);
-      throw error;
+      console.error("Error resetting password:", error);
+      return { error };
     }
   },
 
   /**
-   * Update password
+   * Update user password
    */
-  updatePassword: async (password: string) => {
+  updatePassword: async (password: string): Promise<{ error: any }> => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password
-      });
-      
+      const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      return true;
+      return { error: null };
     } catch (error) {
-      console.error('Error updating password:', error);
-      throw error;
+      console.error("Error updating password:", error);
+      return { error };
     }
   }
 };
