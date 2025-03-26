@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Member } from "../types/MemberTypes";
+import { Member } from "@/types/api";
+import { membersApi } from "@/services/api";
 
 export const useMemberManager = () => {
   const [members, setMembers] = useState<Member[]>([]);
@@ -15,27 +15,8 @@ export const useMemberManager = () => {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      // Now use position field for ordering
-      const { data, error } = await supabase
-        .from('members')
-        .select('*')
-        .order('position', { ascending: true });
-
-      if (error) throw error;
-      
-      // Map data to ensure it conforms to Member interface
-      const typedMembers: Member[] = data?.map(item => ({
-        id: item.id,
-        name: item.name,
-        image: item.image,
-        role: item.role,
-        join_date: item.join_date || undefined,
-        achievements: item.achievements || [],
-        position: item.position || 0,
-        smogon: item.smogon || undefined
-      })) || [];
-      
-      setMembers(typedMembers);
+      const fetchedMembers = await membersApi.getAll();
+      setMembers(fetchedMembers);
     } catch (error: any) {
       console.error("Error fetching members:", error);
       toast({
@@ -59,12 +40,7 @@ export const useMemberManager = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this member?")) {
       try {
-        const { error } = await supabase
-          .from('members')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
+        await membersApi.delete(id);
 
         toast({
           title: "Member deleted",
@@ -91,39 +67,20 @@ export const useMemberManager = () => {
       .filter((a: string) => a);
 
     try {
-      const { data, error } = await supabase
-        .from('members')
-        .update({
-          name: values.name,
-          image: values.image,
-          role: values.role,
-          join_date: values.joinDate,
-          achievements: achievementsArray,
-          smogon: values.smogon || null,
-          // Only include position if editingMember exists
-          ...(editingMember && { position: editingMember.position })
-        })
-        .eq('id', editingMember!.id)
-        .select();
-
-      if (error) throw error;
+      const updatedMember = await membersApi.update(editingMember!.id, {
+        name: values.name,
+        image: values.image,
+        role: values.role,
+        join_date: values.joinDate,
+        achievements: achievementsArray,
+        smogon: values.smogon || null,
+        position: editingMember!.position
+      });
 
       toast({
         title: "Member updated",
         description: "The member has been updated successfully",
       });
-
-      // Convert the response to match the Member interface
-      const updatedMember: Member = {
-        id: data[0].id,
-        name: data[0].name,
-        image: data[0].image,
-        role: data[0].role,
-        join_date: data[0].join_date || undefined,
-        achievements: data[0].achievements,
-        position: data[0].position || 0,
-        smogon: data[0].smogon || undefined
-      };
 
       setMembers(members.map(m => m.id === editingMember!.id ? updatedMember : m));
       setEditingMember(null);
@@ -171,38 +128,9 @@ export const useMemberManager = () => {
       member1.position = member2.position;
       member2.position = tempPosition;
       
-      // Update the first member - update complete member object including position
-      const { error: error1 } = await supabase
-        .from('members')
-        .update({ 
-          name: member1.name,
-          image: member1.image,
-          role: member1.role,
-          join_date: member1.join_date,
-          achievements: member1.achievements,
-          position: member1.position,
-          smogon: member1.smogon
-        })
-        .eq('id', member1.id);
-        
-      if (error1) throw error1;
+      // Update both members with swapped positions
+      await membersApi.swapPositions(member1, member2);
       
-      // Update the second member - update complete member object including position
-      const { error: error2 } = await supabase
-        .from('members')
-        .update({ 
-          name: member2.name,
-          image: member2.image,
-          role: member2.role,
-          join_date: member2.join_date,
-          achievements: member2.achievements,
-          position: member2.position,
-          smogon: member2.smogon
-        })
-        .eq('id', member2.id);
-        
-      if (error2) throw error2;
-
       // Refresh the members to get the updated order
       fetchMembers();
       

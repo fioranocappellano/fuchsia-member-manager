@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { supabase } from "../integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useToast } from "@/components/ui/use-toast";
+import { authApi } from "@/services/api";
 
 type AuthContextType = {
   session: Session | null;
@@ -33,34 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Check if user is admin with caching to avoid multiple calls
   const checkIsAdmin = async (userId: string): Promise<boolean> => {
-    if (!userId) {
-      console.log("No user ID provided to checkIsAdmin");
-      return false;
-    }
-    
-    try {
-      console.log("Checking admin status for user ID:", userId);
-      
-      // Get admin record
-      const { data, error } = await supabase
-        .from('admins')
-        .select('is_active')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Error checking admin status:", error);
-        return false;
-      }
-      
-      const isUserAdmin = data?.is_active === true;
-      console.log("Admin check result:", isUserAdmin, data);
-      
-      return isUserAdmin;
-    } catch (error) {
-      console.error("Exception in checkIsAdmin:", error);
-      return false;
-    }
+    return await authApi.checkIsAdmin(userId);
   };
 
   // Initialize auth state - refactored to avoid race conditions
@@ -96,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         console.log("Initializing auth...");
         
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        const { data: { session: currentSession }, error } = await authApi.getSession();
         
         if (error) {
           console.error("Error getting session:", error);
@@ -160,8 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await authApi.signOut();
       
       // Clear state immediately
       setUser(null);

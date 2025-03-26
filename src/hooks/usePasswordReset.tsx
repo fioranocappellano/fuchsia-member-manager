@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { authApi } from '@/services/api';
 
 export function usePasswordReset() {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,18 +11,16 @@ export function usePasswordReset() {
     try {
       setIsLoading(true);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
-      });
+      const result = await authApi.resetPassword(email);
       
-      if (error) throw error;
+      if (result.success) {
+        toast({
+          title: "Password reset email sent",
+          description: "Check your email for a link to reset your password",
+        });
+      }
       
-      toast({
-        title: "Password reset email sent",
-        description: "Check your email for a link to reset your password",
-      });
-      
-      return { success: true };
+      return result;
     } catch (error: any) {
       console.error("Error sending password reset:", error);
       

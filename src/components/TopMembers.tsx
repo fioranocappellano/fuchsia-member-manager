@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,24 +9,14 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-
-// The members from the database have a different structure
-interface MemberData {
-  id: string;
-  name: string;
-  image: string;
-  role: string;
-  join_date?: string;
-  achievements: string[];
-  position: number;
-  smogon?: string;
-}
+import { Member } from "@/types/api";
+import { membersApi } from "@/services/api";
 
 const TopMembers = () => {
   const { translations } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [members, setMembers] = useState<MemberData[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,30 +26,10 @@ const TopMembers = () => {
       setError(null);
       console.log("Fetching members from Supabase...");
       
-      const { data, error } = await supabase
-        .from('members')
-        .select('*')
-        .order('position', { ascending: true })
-        .throwOnError();
+      const fetchedMembers = await membersApi.getAll();
       
-      if (error) {
-        throw error;
-      }
-      
-      console.log("Fetched members from Supabase:", data?.length || 0);
-      // Map the data to ensure it conforms to MemberData interface
-      const typedMembers: MemberData[] = data?.map(item => ({
-        id: item.id,
-        name: item.name,
-        image: item.image,
-        role: item.role,
-        join_date: item.join_date || undefined,
-        achievements: item.achievements || [],
-        position: item.position || 0,
-        smogon: item.smogon || undefined
-      })) || [];
-      
-      setMembers(typedMembers);
+      console.log("Fetched members from Supabase:", fetchedMembers.length || 0);
+      setMembers(fetchedMembers);
       setLoading(false);
     } catch (err: any) {
       console.error("Error fetching members:", err);
