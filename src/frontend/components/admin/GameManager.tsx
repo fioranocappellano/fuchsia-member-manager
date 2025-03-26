@@ -68,7 +68,7 @@ const GameManager = () => {
             onDelete={deleteGame}
             onMoveItem={async (id, direction) => {
               // Convert numeric index to ID
-              const gameId = typeof id === 'number' ? games[id]?.id : id;
+              const gameId = typeof id === 'string' ? id : games[id]?.id;
               if (gameId) {
                 await handlePositionChange(games.findIndex(g => g.id === gameId), direction);
               }

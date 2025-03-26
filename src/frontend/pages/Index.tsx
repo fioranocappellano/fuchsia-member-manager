@@ -7,7 +7,7 @@ import Hero from "@/frontend/components/Hero";
 import Community from "@/frontend/components/Community";
 import TopMembers from "@/frontend/components/TopMembers";
 import Footer from "@/frontend/components/Footer";
-import JudgmentFleetBanner from "@/frontend/components/JudgmentFleetBanner";
+import Navbar from "@/frontend/components/Navbar";
 
 const Index = () => {
   const location = useLocation();
@@ -37,6 +37,8 @@ const Index = () => {
           content="Il meglio del Competitivo Pokemon Italiano."
         />
       </Helmet>
+      
+      <Navbar />
       
       <main>
         <Hero />
