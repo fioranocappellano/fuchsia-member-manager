@@ -14,15 +14,17 @@ src/
 ├── frontend/             # Tutto il codice relativo al frontend
 │   ├── components/       # Componenti UI riutilizzabili
 │   ├── hooks/            # Hook personalizzati React
+│   ├── pages/            # Componenti pagina
+│   ├── contexts/         # Context providers React
+│   ├── utils/            # Utility funzioni per il frontend
 │   └── types/            # Tipi TypeScript per il frontend
 │
 ├── backend/              # Tutto il codice relativo al backend
 │   └── api/              # Moduli API per comunicare con il database
 │
-├── contexts/             # Context providers React
-├── hooks/                # Hook globali condivisi
 ├── integrations/         # Integrazioni con servizi esterni (Supabase)
-├── pages/                # Componenti pagina
+├── contexts/             # Context providers React globali
+├── hooks/                # Hook globali condivisi
 └── utils/                # Utility funzioni condivise
 ```
 
@@ -41,26 +43,118 @@ src/
 - **Implementazione**: Attualmente basata su Supabase, ma facilmente sostituibile.
 - **Servizi**: Moduli separati per membri, giochi, FAQ e autenticazione.
 
-## Moduli Principali
+## Moduli Principali e Loro Funzioni
 
 ### API Backend
 
-- **membersApi**: Gestisce tutte le operazioni CRUD per i membri del team.
-- **gamesApi**: Gestisce le operazioni relative ai migliori giochi.
-- **faqApi**: Gestisce le FAQ del sito.
-- **authApi**: Gestisce l'autenticazione degli utenti e le operazioni correlate.
+#### membersApi
+- **getAll()**: Recupera tutti i membri ordinati per posizione.
+- **getById(id)**: Recupera un membro specifico tramite ID.
+- **create(member)**: Crea un nuovo membro.
+- **update(id, member)**: Aggiorna un membro esistente.
+- **delete(id)**: Elimina un membro.
+- **swapPositions(member1, member2)**: Scambia la posizione di due membri.
 
-### Context
+#### gamesApi
+- **getAll()**: Recupera tutti i giochi ordinati per posizione.
+- **getById(id)**: Recupera un gioco specifico tramite ID.
+- **create(game)**: Crea un nuovo gioco.
+- **update(id, game)**: Aggiorna un gioco esistente.
+- **delete(id)**: Elimina un gioco.
+- **swapPositions(game1, game2)**: Scambia la posizione di due giochi.
 
-- **LanguageContext**: Gestisce l'internazionalizzazione del sito.
-- **AuthContext**: Gestisce lo stato di autenticazione dell'utente.
+#### faqsApi
+- **getAll()**: Recupera tutte le FAQ attive.
+- **getAllForAdmin()**: Recupera tutte le FAQ (attive e non) per l'admin.
+- **getById(id)**: Recupera una FAQ specifica tramite ID.
+- **create(faq)**: Crea una nuova FAQ.
+- **update(id, faq)**: Aggiorna una FAQ esistente.
+- **delete(id)**: Elimina una FAQ.
+- **swapPositions(faq1, faq2)**: Scambia la posizione di due FAQ.
 
-### Hooks
+#### authApi
+- **signIn(email, password)**: Effettua il login di un utente.
+- **signOut()**: Effettua il logout dell'utente corrente.
+- **checkIsAdmin(userId)**: Verifica se l'utente è un amministratore.
+- **resetPassword(email)**: Invia un'email per il reset della password.
+- **updatePassword(newPassword)**: Aggiorna la password dell'utente.
+- **getCurrentUser()**: Ottiene l'utente corrente dalla sessione.
 
-- **usePasswordReset**: Gestisce il processo di reset della password.
-- **useGameManager**: Gestisce la logica per la gestione dei giochi.
-- **useMemberManager**: Gestisce la logica per la gestione dei membri.
-- **useFAQManager**: Gestisce la logica per la gestione delle FAQ.
+### Componenti Frontend
+
+#### Navbar
+- Gestisce la navigazione tra le pagine e le sezioni.
+- Supporta sia la navigazione desktop che mobile.
+- Mostra linguette extra per gli admin.
+
+#### JudgmentFleetBanner
+- Mostra lo sfondo con il nome del team.
+- Applica animazioni all'entrata.
+
+#### PlayerCard
+- Visualizza informazioni di un membro del team.
+- Gestisce errori di caricamento immagini con fallback.
+- Mostra collegamenti ai profili Smogon.
+
+#### TopMembers
+- Visualizza tutti i membri del team.
+- Gestisce la logica di caricamento e visualizzazione.
+- Aggiorna i dati in tempo reale con Supabase.
+
+#### LanguageSelector
+- Permette agli utenti di cambiare lingua.
+- Mantiene la posizione di scroll durante il cambio.
+
+#### Footer
+- Mostra informazioni di contatto e risorse.
+- Carica risorse dinamicamente dal database.
+
+### Hooks Frontend
+
+#### usePasswordReset
+- **resetPassword(email)**: Gestisce la richiesta di reset della password.
+- Integra notifiche toast per feedback all'utente.
+
+#### useGameManager
+- **fetchGames()**: Carica i giochi dal database.
+- **handleEdit(game)**: Prepara un gioco per la modifica.
+- **handleDelete(id)**: Elimina un gioco.
+- **handleUpdate(values)**: Aggiorna un gioco esistente.
+- **moveItem(id, direction)**: Sposta un gioco nell'ordine.
+- **toggleReordering()**: Attiva/disattiva la modalità riordinamento.
+
+#### useMemberManager
+- **fetchMembers()**: Carica i membri dal database.
+- **handleEdit(member)**: Prepara un membro per la modifica.
+- **handleDelete(id)**: Elimina un membro.
+- **handleUpdate(values)**: Aggiorna un membro esistente.
+- **moveItem(id, direction)**: Sposta un membro nell'ordine.
+- **toggleReordering()**: Attiva/disattiva la modalità riordinamento.
+
+#### useFAQManager
+- **fetchFaqs()**: Carica le FAQ dal database.
+- **handleEdit(faq)**: Prepara una FAQ per la modifica.
+- **handleDelete(id)**: Elimina una FAQ.
+- **handleUpdate(values)**: Aggiorna una FAQ esistente.
+- **handleToggleActive(id, isActive)**: Attiva/disattiva una FAQ.
+- **moveItem(id, direction)**: Sposta una FAQ nell'ordine.
+- **toggleReordering()**: Attiva/disattiva la modalità riordinamento.
+
+### Utils Frontend
+
+#### imageUtils
+- **normalizeImageUrl(imagePath)**: Normalizza gli URL delle immagini per garantire che siano corretti.
+
+### Contexts
+
+#### LanguageContext
+- Gestisce lo stato della lingua corrente (italiano/inglese).
+- Fornisce le traduzioni appropriate in base alla lingua selezionata.
+
+#### AuthContext
+- Gestisce lo stato di autenticazione dell'utente.
+- Verifica se l'utente è un amministratore.
+- Fornisce funzioni di login/logout.
 
 ## Flusso dei Dati
 

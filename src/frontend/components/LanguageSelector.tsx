@@ -1,6 +1,6 @@
 
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/frontend/contexts/LanguageContext";
+import { Button } from "@/frontend/components/ui/button";
 
 // Flag paths use the uploaded images
 const flagImages = {
