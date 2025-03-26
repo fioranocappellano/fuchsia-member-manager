@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { authApi } from '@/services/api';
+import { authApi } from '@/backend/api';
 
 export function usePasswordReset() {
   const [isLoading, setIsLoading] = useState(false);

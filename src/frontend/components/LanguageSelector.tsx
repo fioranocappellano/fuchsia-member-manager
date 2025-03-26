@@ -1,4 +1,5 @@
-import { useLanguage } from "../contexts/LanguageContext";
+
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 
 // Flag paths use the uploaded images

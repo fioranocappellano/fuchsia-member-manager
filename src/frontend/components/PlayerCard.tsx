@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { normalizeImageUrl } from "../utils/imageUtils";
+import { normalizeImageUrl } from "@/utils/imageUtils";
 import { Link } from "lucide-react";
 
 type PlayerCardProps = {

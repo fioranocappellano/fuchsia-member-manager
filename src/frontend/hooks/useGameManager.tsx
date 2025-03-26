@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Game } from "@/types/api";
-import { gamesApi } from "@/services/api";
+import { Game } from "@/frontend/types/api";
+import { gamesApi } from "@/backend/api";
 
 export const useGameManager = () => {
   const [games, setGames] = useState<Game[]>([]);

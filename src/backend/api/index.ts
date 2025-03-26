@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Member, Game, FAQ, NewFAQ } from "@/types/api";
+import { Member, Game, FAQ, NewFAQ } from "@/frontend/types/api";
 
 // Funzioni di utilità condivise
 const handleError = (error: any, message: string): never => {
