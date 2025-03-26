@@ -29,9 +29,24 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     // Update the document's lang attribute
     document.documentElement.lang = locale;
 
-    // Update the URL to include the locale
-    const newPathname = `/${locale}${location.pathname}`;
-    navigate(newPathname, { replace: true });
+    // Only update URL if we're ready to navigate
+    if (navigate && location) {
+      try {
+        // Get the current path without the locale prefix if any
+        let currentPath = location.pathname;
+        if (currentPath.startsWith(`/${locale}/`)) {
+          currentPath = currentPath.substring(locale.length + 1);
+        } else if (currentPath === `/${locale}`) {
+          currentPath = '/';
+        }
+        
+        // Build the new path with the locale
+        const newPathname = currentPath === '/' ? `/${locale}` : `/${locale}${currentPath}`;
+        navigate(newPathname, { replace: true });
+      } catch (error) {
+        console.error("Navigation error:", error);
+      }
+    }
   }, [locale, navigate, location]);
 
   return (
