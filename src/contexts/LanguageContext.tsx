@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import it from "../locales/it";
-import en from "../locales/en";
+import { it } from "../locales/it";
+import { en } from "../locales/en";
 
 interface LanguageContextProps {
   locale: string;

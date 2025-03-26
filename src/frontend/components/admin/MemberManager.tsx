@@ -14,7 +14,6 @@ const MemberManager = () => {
   const {
     members,
     loading,
-    error,
     createMember,
     updateMember,
     deleteMember,
@@ -23,8 +22,13 @@ const MemberManager = () => {
   } = useMemberManager();
 
   // Handler for updating a member's position in the list
-  const handlePositionChange = async (id: string, direction: 'up' | 'down') => {
-    await changePosition(id, direction);
+  const handlePositionChange = async (index: number, direction: 'up' | 'down') => {
+    if (index >= 0 && index < members.length) {
+      const member = members[index];
+      if (member?.id) {
+        await changePosition(member.id, direction);
+      }
+    }
   };
 
   // Form submission handler
@@ -33,11 +37,15 @@ const MemberManager = () => {
       // Update existing member
       await updateMember({
         ...memberData,
-        id: selectedMember.id
+        id: selectedMember.id,
+        position: selectedMember.position || 0
       });
     } else {
       // Create new member
-      await createMember(memberData as Omit<Member, "id" | "created_at" | "updated_at">);
+      await createMember({
+        ...memberData as Omit<Member, "id" | "created_at" | "updated_at">,
+        position: members.length + 1
+      });
     }
     setSelectedMember(null);
   };
@@ -61,7 +69,12 @@ const MemberManager = () => {
             reordering={false}
             onEdit={(member) => setSelectedMember(member)}
             onDelete={deleteMember}
-            onMoveItem={handlePositionChange}
+            onMoveItem={(id, direction) => {
+              const index = members.findIndex(member => member.id === id);
+              if (index !== -1) {
+                handlePositionChange(index, direction);
+              }
+            }}
           />
         </div>
         

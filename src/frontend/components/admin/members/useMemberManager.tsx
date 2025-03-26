@@ -1,28 +1,32 @@
 
-import { useState, useEffect } from "react";
-import { useToast } from "@/frontend/hooks/use-toast";
-import { Member } from "@/frontend/types/api";
-import { membersApi } from "@/backend/api";
+import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { Member } from '@/frontend/types/api';
+import { membersApi } from '@/backend/api';
 
+/**
+ * Hook for managing team members
+ */
 export const useMemberManager = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingMember, setEditingMember] = useState<Member | null>(null);
-  const [reordering, setReordering] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [error, setError] = useState('');
   const { toast } = useToast();
-  
+
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const fetchedMembers = await membersApi.getAll();
-      setMembers(fetchedMembers);
-    } catch (error: any) {
-      console.error("Error fetching members:", error);
+      const data = await membersApi.getAll();
+      setMembers(data);
+      setError('');
+    } catch (err: any) {
+      console.error('Error fetching members:', err);
+      setError(err.message || 'Failed to load members');
       toast({
-        title: "Error fetching members",
-        description: error.message,
-        variant: "destructive",
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to load team members',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -33,113 +37,83 @@ export const useMemberManager = () => {
     fetchMembers();
   }, []);
 
-  const handleEdit = (member: Member) => {
-    setEditingMember(member);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this member?")) {
-      try {
-        await membersApi.delete(id);
-
-        toast({
-          title: "Member deleted",
-          description: "The member has been deleted successfully",
-        });
-
-        // Refresh the list after deletion
-        fetchMembers();
-      } catch (error: any) {
-        console.error("Error deleting member:", error);
-        toast({
-          title: "Error deleting member",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleUpdate = async (values: any) => {
-    const achievementsArray = values.achievements
-      .split("\n")
-      .map((a: string) => a.trim())
-      .filter((a: string) => a);
-
+  const createMember = async (memberData: Omit<Member, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const updatedMember = await membersApi.update(editingMember!.id, {
-        name: values.name,
-        image: values.image,
-        role: values.role,
-        join_date: values.joinDate,
-        achievements: achievementsArray,
-        smogon: values.smogon || null,
-        position: editingMember!.position
-      });
-
+      await membersApi.create(memberData);
       toast({
-        title: "Member updated",
-        description: "The member has been updated successfully",
+        id: crypto.randomUUID(),
+        title: 'Success',
+        description: 'Member added successfully',
       });
-
-      setMembers(members.map(m => m.id === editingMember!.id ? updatedMember : m));
-      setEditingMember(null);
-    } catch (error: any) {
-      console.error("Error updating member:", error);
+      await fetchMembers();
+    } catch (err: any) {
+      console.error('Error creating member:', err);
       toast({
-        title: "Error updating member",
-        description: error.message,
-        variant: "destructive",
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to add team member',
+        variant: 'destructive',
       });
     }
   };
 
-  const handleAddMember = () => {
-    // Refresh all members to get the correct order
-    fetchMembers();
-  };
-
-  const toggleReordering = () => {
-    setReordering(!reordering);
-    // Close dialog when reordering
-    if (!reordering) {
-      setDialogOpen(false);
-    }
-  };
-
-  const moveItem = async (id: string, direction: 'up' | 'down') => {
+  const updateMember = async (memberData: Partial<Member> & { id: string }) => {
     try {
-      const currentIndex = members.findIndex(member => member.id === id);
-      if (
-        (direction === 'up' && currentIndex === 0) || 
-        (direction === 'down' && currentIndex === members.length - 1)
-      ) {
-        return;
-      }
-
-      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      
-      // Get the two members we're swapping
-      const member1 = members[currentIndex];
-      const member2 = members[newIndex];
-      
-      // Swap their positions
-      const tempPosition = member1.position;
-      member1.position = member2.position;
-      member2.position = tempPosition;
-      
-      // Update both members with swapped positions
-      await membersApi.swapPositions(member1, member2);
-      
-      // Refresh the members to get the updated order
-      fetchMembers();
-      
-    } catch (error: any) {
-      console.error("Error updating position:", error);
+      await membersApi.update(memberData.id, memberData);
       toast({
-        title: "Error updating position",
-        description: error.message,
-        variant: "destructive",
+        id: crypto.randomUUID(),
+        title: 'Success',
+        description: 'Member updated successfully',
+      });
+      await fetchMembers();
+    } catch (err: any) {
+      console.error('Error updating member:', err);
+      toast({
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to update team member',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const deleteMember = async (id: string) => {
+    try {
+      await membersApi.delete(id);
+      toast({
+        id: crypto.randomUUID(),
+        title: 'Success',
+        description: 'Member deleted successfully',
+      });
+      await fetchMembers();
+    } catch (err: any) {
+      console.error('Error deleting member:', err);
+      toast({
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to delete team member',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const changePosition = async (id: string, direction: 'up' | 'down') => {
+    try {
+      if (!id) return;
+      
+      // Make sure we have position data
+      const member = members.find(m => m.id === id);
+      if (!member || member.position === undefined) return;
+      
+      await membersApi.updatePosition(id, direction);
+      await fetchMembers();
+    } catch (err: any) {
+      console.error('Error updating member position:', err);
+      toast({
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to update member position',
+        variant: 'destructive',
       });
     }
   };
@@ -147,17 +121,11 @@ export const useMemberManager = () => {
   return {
     members,
     loading,
-    editingMember,
-    reordering,
-    dialogOpen,
-    setDialogOpen,
-    fetchMembers,
-    handleEdit,
-    handleDelete,
-    handleUpdate,
-    handleAddMember,
-    toggleReordering,
-    moveItem,
-    setEditingMember
+    error,
+    createMember,
+    updateMember,
+    deleteMember,
+    changePosition,
+    refresh: fetchMembers,
   };
 };

@@ -21,10 +21,19 @@ export const useGameManager = () => {
         .order("position", { ascending: true });
 
       if (error) throw error;
-      setGames(data || []);
+      
+      // Ensure all games have required properties
+      const processedGames = (data || []).map(game => ({
+        ...game,
+        winner: game.winner || "",
+        updated_at: game.updated_at || game.created_at || new Date().toISOString()
+      })) as Game[];
+      
+      setGames(processedGames);
     } catch (error: any) {
       console.error("Error fetching games:", error);
       toast({
+        id: crypto.randomUUID(),
         title: "Error fetching games",
         description: error.message,
         variant: "destructive",
@@ -64,6 +73,7 @@ export const useGameManager = () => {
 
         if (error) throw error;
         toast({
+          id: crypto.randomUUID(),
           title: "Game deleted",
           description: "The game has been deleted successfully",
         });
@@ -71,6 +81,7 @@ export const useGameManager = () => {
       } catch (error: any) {
         console.error("Error deleting game:", error);
         toast({
+          id: crypto.randomUUID(),
           title: "Error deleting game",
           description: error.message,
           variant: "destructive",
@@ -98,6 +109,7 @@ export const useGameManager = () => {
 
       if (error) throw error;
       toast({
+        id: crypto.randomUUID(),
         title: "Game updated",
         description: "The game has been updated successfully",
       });
@@ -106,6 +118,7 @@ export const useGameManager = () => {
     } catch (error: any) {
       console.error("Error updating game:", error);
       toast({
+        id: crypto.randomUUID(),
         title: "Error updating game",
         description: error.message,
         variant: "destructive",
@@ -140,6 +153,7 @@ export const useGameManager = () => {
 
       if (error) throw error;
       toast({
+        id: crypto.randomUUID(),
         title: "Game added",
         description: "The game has been added successfully",
       });
@@ -148,6 +162,7 @@ export const useGameManager = () => {
     } catch (error: any) {
       console.error("Error adding game:", error);
       toast({
+        id: crypto.randomUUID(),
         title: "Error adding game",
         description: error.message,
         variant: "destructive",
@@ -199,6 +214,7 @@ export const useGameManager = () => {
     } catch (error: any) {
       console.error("Error moving game:", error);
       toast({
+        id: crypto.randomUUID(),
         title: "Error moving game",
         description: error.message,
         variant: "destructive",

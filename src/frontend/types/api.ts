@@ -4,7 +4,7 @@
  */
 export interface User {
   id: string;
-  email?: string;
+  email: string;
   role?: string;
 }
 
@@ -17,9 +17,9 @@ export interface Member {
   role: string;
   smogon?: string;
   image: string;
-  achievements: string[]; // Changed from optional to required
+  achievements: string[];
   join_date?: string;
-  position?: number;
+  position: number; // Changed from optional to required
   created_at?: string;
   updated_at?: string;
 }
@@ -39,8 +39,8 @@ export interface Game {
   description_en: string;
   description_it: string;
   position: number;
-  created_at: string; // Changed from optional to required
-  updated_at?: string;
+  created_at: string;
+  updated_at: string; // Changed from optional to required
 }
 
 /**
@@ -56,7 +56,7 @@ export interface GameFormData {
   image_url: string;
   description_en: string;
   description_it: string;
-  position?: number; // Added position as optional
+  position: number; // Changed from optional to required
 }
 
 /**

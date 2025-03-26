@@ -67,10 +67,11 @@ const FAQManager = () => {
         <FAQList
           faqs={faqs}
           loading={loading}
+          reordering={reordering}
           onEdit={handleEdit}
           onDelete={handleDelete}
           moveItem={moveItem}
-          reordering={reordering}
+          onToggleActive={handleToggleActive}
         />
       )}
     </div>

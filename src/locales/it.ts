@@ -1,119 +1,95 @@
 
-// Italian language translations
-const it = {
-  // Navbar
+export const it = {
+  // Common translations
+  title: "Judgment Fleet",
+  description: "Team competitivo italiano di Pokémon showdown",
+  menu: "Menu",
+  language: "Lingua",
+  
+  // Navigation
   home: "Home",
-  bestGames: "Migliori Partite",
+  about: "Chi Siamo",
+  bestGames: "Partite Migliori",
   faq: "FAQ",
-  adminPanel: "Pannello Admin",
   login: "Accedi",
   logout: "Esci",
-  signUp: "Registrati",
+  admin: "Admin",
   
-  // Hero Section
-  heroTitle: "Benvenuto nel Team Italiano di Smogon",
-  heroSubtitle: "Unisciti a Judgment Fleet e competi ai massimi livelli nel competitivo Pokemon.",
-  heroButton: "Unisciti a Noi",
+  // Hero section
+  heroTitle: "Judgment Fleet",
+  heroSubtitle: "Il team competitivo italiano di Pokémon Showdown",
+  joinButton: "Unisciti a Noi",
+  learnMore: "Scopri di Più",
   
-  // Top Members Section
-  topMembersTitle: "I nostri membri",
-  topMembersSubtitle: "Ecco alcuni dei nostri migliori giocatori",
+  // About section
+  aboutTitle: "Chi Siamo",
+  aboutSubtitle: "Un team con una visione",
+  aboutDescription: "Judgment Fleet nasce nel settembre 2015, con l'intento di dare un'opportunità a giocatori italiani di crescere e migliorare insieme. Nel corso degli anni abbiamo ottenuto importanti risultati, sia a livello individuale che come squadra.",
+  membersSince: "Membro dal",
+  noMembers: "Nessun membro trovato",
   
-  // Community Section
-  communityTitle: "La Nostra Community",
-  communitySubtitle: "Scopri cosa rende Judgment Fleet speciale",
-  communityCard1Title: "Competitivo di Alto Livello",
-  communityCard1Desc: "I nostri membri competono ai massimi livelli nei tornei di Smogon.",
-  communityCard2Title: "Supporto Costante",
-  communityCard2Desc: "Offriamo coaching, analisi di team e strategie per aiutarti a migliorare.",
-  communityCard3Title: "Eventi Esclusivi",
-  communityCard3Desc: "Organizziamo tornei e eventi esclusivi per la community italiana.",
-  joinDiscord: "Unisciti al nostro Discord",
+  // Best Games section
+  bestGamesTitle: "Partite Migliori",
+  bestGamesSubtitle: "Le nostre partite più memorabili",
+  bestGamesDescription: "Ecco alcune delle partite più emozionanti giocate dai membri di Judgment Fleet nei tornei.",
+  viewReplay: "Guarda Replay",
+  tournament: "Torneo",
+  phase: "Fase",
+  format: "Formato",
+  players: "Giocatori",
+  winner: "Vincitore",
   
-  // CTA Section
-  ctaTitle: "Pronto a Unirti?",
-  ctaSubtitle: "Fai domanda oggi e diventa parte del team italiano più forte su Smogon.",
-  ctaButton: "Contattaci",
-  
-  // Admin Section
-  adminTitle: "Pannello di Amministrazione",
-  manageFAQs: "Gestisci FAQs",
-  manageTeam: "Gestisci Team",
-  manageGames: "Gestisci Partite",
-  manageFooter: "Gestisci Footer",
-  backToSite: "Torna al Sito",
-  
-  // FAQ Section
+  // FAQ section
   faqSection: "Domande Frequenti",
-  faqDescription: "Trova risposte alle domande più comuni su Judgment Fleet e il competitivo Pokémon.",
-  otherQuestions: "Hai altre domande? Contattaci su Twitter!",
+  faqDescription: "Tutto quello che devi sapere su Judgment Fleet",
+  otherQuestions: "Hai altre domande?",
   contactTwitter: "Contattaci su Twitter",
   
+  // Community section
+  communityTitle: "Unisciti alla Community",
+  communitySubtitle: "Diventa parte del team",
+  communityDescription: "Se sei interessato a unirti a Judgment Fleet, partecipa ai nostri tryout o contattaci sui social media.",
+  discordButton: "Entra nel Discord",
+  smogonButton: "Profilo Smogon",
+  
   // Footer
-  footerAbout: "Su di Noi",
-  footerResources: "Risorse",
-  footerContact: "Contattaci",
-  footerRights: "Tutti i diritti riservati",
+  allRightsReserved: "Tutti i diritti riservati",
+  resources: "Risorse",
+  community: "Community",
+  legal: "Legale",
   
-  // Best Games Section
-  bestGamesTitle: "Le Nostre Migliori Partite",
-  bestGamesSubtitle: "Guarda alcune delle partite più emozionanti giocate dai nostri membri",
-  watchReplay: "Guarda Replay",
-  playedBy: "Giocata da",
+  // Error
+  notFound: "Pagina Non Trovata",
+  goBack: "Torna Indietro",
   
-  // Login Form
-  loginTitle: "Accedi",
-  loginSubtitle: "Accedi al tuo account",
-  emailLabel: "Email",
-  passwordLabel: "Password",
-  loginButton: "Accedi",
-  forgotPassword: "Password dimenticata?",
+  // Auth
+  signIn: "Accedi",
+  signUp: "Registrati",
+  email: "Email",
+  password: "Password",
+  confirmPassword: "Conferma Password",
+  forgotPassword: "Password Dimenticata?",
   noAccount: "Non hai un account?",
-  createAccount: "Crea un account",
-  
-  // Register Form
-  registerTitle: "Registrati",
-  registerSubtitle: "Crea un nuovo account",
-  nameLabel: "Nome",
-  confirmPasswordLabel: "Conferma Password",
-  registerButton: "Registrati",
   alreadyAccount: "Hai già un account?",
+  resetPassword: "Reimposta Password",
+  resetPasswordDesc: "Inserisci la tua email per ricevere un link di reimpostazione password",
+  sendResetLink: "Invia Link di Reset",
+  backToLogin: "Torna al Login",
+  newPassword: "Nuova Password",
+  setNewPassword: "Imposta Nuova Password",
   
-  // Forgot Password
-  forgotTitle: "Password Dimenticata",
-  forgotSubtitle: "Inserisci la tua email per reimpostare la password",
-  resetButton: "Reimposta Password",
-  backToLogin: "Torna al login",
-  
-  // Password Reset
-  resetTitle: "Reimposta Password",
-  resetSubtitle: "Inserisci la tua nuova password",
-  newPasswordLabel: "Nuova Password",
-  confirmNewPasswordLabel: "Conferma Nuova Password",
-  updatePasswordButton: "Aggiorna Password",
-  
-  // Error messages
-  errorRequired: "Questo campo è obbligatorio",
-  errorInvalidEmail: "Email non valida",
-  errorPasswordLength: "La password deve essere lunga almeno 6 caratteri",
-  errorPasswordMatch: "Le password non corrispondono",
-
-  // Toast messages
-  successTitle: "Successo",
-  errorTitle: "Errore",
-  loginSuccess: "Accesso effettuato con successo",
-  loginError: "Errore di accesso",
-  registerSuccess: "Registrazione effettuata con successo",
-  registerError: "Errore di registrazione",
-  resetEmailSent: "Email per reimpostare la password inviata",
-  resetEmailError: "Errore nell'invio dell'email",
-  passwordUpdateSuccess: "Password aggiornata con successo",
-  passwordUpdateError: "Errore nell'aggiornamento della password",
-  
-  // 404 Page
-  notFoundTitle: "Pagina Non Trovata",
-  notFoundSubtitle: "La pagina che stai cercando non esiste.",
-  goHomeButton: "Torna alla Home"
+  // Admin
+  adminDashboard: "Pannello di Amministrazione",
+  adminOverview: "Panoramica",
+  adminMembers: "Membri del Team",
+  adminGames: "Partite",
+  adminFAQ: "FAQ",
+  adminResources: "Risorse Footer",
+  adminWelcome: "Benvenuto al pannello amministratore",
+  adminDescription: "Gestisci i membri del team, le partite migliori, le FAQ e altre risorse del sito",
+  adminMembers: "Gestione Membri",
+  adminGames: "Gestione Partite",
+  adminFAQ: "Gestione FAQ",
+  adminSiteResources: "Risorse del Sito",
+  adminSettings: "Impostazioni",
 };
-
-export default it;

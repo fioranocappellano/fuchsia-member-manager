@@ -3,7 +3,7 @@
 // Eventually this should be removed in favor of using the types from @/frontend/types/api
 import { Member as ApiMember } from "@/frontend/types/api";
 
-export interface Member extends ApiMember {
+export interface Member extends Omit<ApiMember, "position"> {
   // Ensure all fields from the API are required for backwards compatibility
   position: number;
 }

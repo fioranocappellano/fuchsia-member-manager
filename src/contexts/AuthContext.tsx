@@ -8,6 +8,7 @@ export interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isLoading: boolean; // Added this property
   isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string) => Promise<any>;
@@ -34,6 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser({
           id: session.user.id,
           email: session.user.email || "",
+          role: ""
         });
         checkAdmin(session.user.id);
       }
@@ -47,6 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser({
           id: session.user.id,
           email: session.user.email || "",
+          role: ""
         });
         checkAdmin(session.user.id);
       } else {
@@ -91,6 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser({
           id: data.user.id,
           email: data.user.email || "",
+          role: ""
         });
         checkAdmin(data.user.id);
       }
@@ -166,6 +170,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       user, 
       session, 
       loading, 
+      isLoading: loading, // Map loading to isLoading
       isAdmin,
       signIn, 
       signUp, 

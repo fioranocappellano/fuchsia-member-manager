@@ -19,11 +19,18 @@ const MemberManager = () => {
     handleUpdate,
     handleAddMember,
     handleEdit,
-    handleMoveItem,
+    moveItem
   } = useMemberManager();
 
   // Handler functions to map to expected props
-  const onEdit = handleEdit || ((member: Member) => setEditingMember(member));
+  const onEdit = (member: Member) => {
+    if (handleEdit) {
+      handleEdit(member);
+    } else {
+      setEditingMember(member);
+    }
+  };
+  
   const onDelete = handleDelete;
   
   const onUpdate = async (memberData: Partial<Member>) => {
@@ -36,13 +43,23 @@ const MemberManager = () => {
     setEditingMember(null);
   };
   
-  const onAddMember = handleAddMember || (() => setDialogOpen(true));
+  const onAddMember = () => {
+    if (handleAddMember) {
+      handleAddMember();
+    } else {
+      setDialogOpen(true);
+    }
+  };
   
   const toggleReordering = () => setReordering(prev => !prev);
   
-  const onMoveItem = handleMoveItem || ((id: string, direction: 'up' | 'down') => {
-    console.log("Move member not implemented:", id, direction);
-  });
+  const onMoveItem = async (id: string, direction: 'up' | 'down') => {
+    if (moveItem) {
+      await moveItem(id, direction);
+    } else {
+      console.log("Move member not implemented:", id, direction);
+    }
+  };
 
   return (
     <div>

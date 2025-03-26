@@ -20,11 +20,18 @@ const GameManager = () => {
     handleUpdate,
     handleAddGame,
     handleEdit,
-    moveItem,
+    moveItem
   } = useGameManager();
 
   // Handlers to map to the expected API
-  const onEdit = handleEdit || ((game: Game) => setEditingGame(game));
+  const onEdit = (game: Game) => {
+    if (handleEdit) {
+      handleEdit(game);
+    } else {
+      setEditingGame(game);
+    }
+  };
+  
   const onDelete = handleDelete;
   
   const onUpdate = async (formData: any) => {
@@ -38,14 +45,24 @@ const GameManager = () => {
     setEditingGame(null);
   };
   
-  const onAddGame = handleAddGame || (() => setDialogOpen(true));
+  const onAddGame = () => {
+    if (handleAddGame) {
+      handleAddGame();
+    } else {
+      setDialogOpen(true);
+    }
+  };
   
   const toggleReordering = () => setReordering(prev => !prev);
   
-  const onMoveItem = moveItem || (async (id: string, direction: 'up' | 'down') => {
-    // Default implementation if moveItem isn't provided
-    console.log("Move item not implemented:", id, direction);
-  });
+  const onMoveItem = async (id: string, direction: 'up' | 'down') => {
+    if (moveItem) {
+      await moveItem(id, direction);
+    } else {
+      // Default implementation if moveItem isn't provided
+      console.log("Move item not implemented:", id, direction);
+    }
+  };
 
   return (
     <div>

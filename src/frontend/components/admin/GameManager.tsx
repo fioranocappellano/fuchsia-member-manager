@@ -14,7 +14,6 @@ const GameManager = () => {
   const {
     games,
     loading,
-    error,
     createGame,
     updateGame,
     deleteGame,
@@ -24,9 +23,11 @@ const GameManager = () => {
 
   // Handler for updating a game's position in the list
   const handlePositionChange = async (index: number, direction: 'up' | 'down') => {
-    const game = games[index];
-    if (game?.id) {
-      await updatePosition(game.id, direction);
+    if (index >= 0 && index < games.length) {
+      const game = games[index];
+      if (game?.id) {
+        await updatePosition(game.id, direction);
+      }
     }
   };
 
@@ -62,10 +63,15 @@ const GameManager = () => {
           <GameList 
             games={games}
             loading={loading}
-            error={error}
-            onSelect={setSelectedGame}
+            reordering={false}
+            onEdit={setSelectedGame}
             onDelete={deleteGame}
-            onPositionChange={handlePositionChange}
+            onMoveItem={(id, direction) => {
+              const index = games.findIndex(game => game.id === id);
+              if (index !== -1) {
+                handlePositionChange(index, direction);
+              }
+            }}
           />
         </div>
         

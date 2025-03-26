@@ -38,7 +38,12 @@ const GameList: React.FC<GameListProps> = ({
           reordering={reordering}
           onEdit={onEdit}
           onDelete={onDelete}
-          onMoveItem={(direction) => onMoveItem(game.id, direction)}
+          onMoveItem={(direction) => {
+            // Type check to ensure direction is 'up' or 'down'
+            if (direction === 'up' || direction === 'down') {
+              onMoveItem(game.id, direction);
+            }
+          }}
           isFirst={index === 0}
           isLast={index === games.length - 1}
         />

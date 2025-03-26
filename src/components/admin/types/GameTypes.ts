@@ -3,7 +3,7 @@
 // Eventually this should be removed in favor of using the types from @/frontend/types/api
 import { Game as ApiGame } from "@/frontend/types/api";
 
-export interface Game extends ApiGame {
+export interface Game extends Omit<ApiGame, "updated_at" | "winner"> {
   // Ensure all fields from the API are required for backwards compatibility
   updated_at: string;
   winner: string;

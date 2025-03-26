@@ -28,14 +28,7 @@ export const faqsApi = {
   },
 
   /**
-   * Alias for getAll that frontend components can use
-   */
-  getAllForAdmin: async (): Promise<FAQ[]> => {
-    return faqsApi.getAll();
-  },
-
-  /**
-   * Fetches active FAQs from the database
+   * Fetches only active FAQs from the database
    */
   getActive: async (): Promise<FAQ[]> => {
     try {

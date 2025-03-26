@@ -21,6 +21,7 @@ const GameEditForm: React.FC<GameEditFormProps> = ({ game, onSave, onCancel }) =
       phase: game.phase,
       format: game.format,
       players: game.players,
+      winner: game.winner,
       image_url: game.image_url,
       replay_url: game.replay_url,
       description_it: game.description_it,
@@ -155,6 +156,26 @@ const GameEditForm: React.FC<GameEditFormProps> = ({ game, onSave, onCancel }) =
               )}
             />
           </div>
+          
+          <FormField
+            control={editForm.control}
+            name="winner"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
+                  <Trophy size={14} className="text-[#D946EF]" /> Vincitore
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    required 
+                    placeholder="Nome del vincitore" 
+                    className="bg-black/60 border-white/10 text-white"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField

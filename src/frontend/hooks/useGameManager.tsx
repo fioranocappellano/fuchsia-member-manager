@@ -1,27 +1,32 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Game, GameFormData } from "@/frontend/types/api";
-import { gamesApi } from "@/backend/api";
 
+import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { Game, GameFormData } from '@/frontend/types/api';
+import { gamesApi } from '@/backend/api';
+
+/**
+ * Hook for managing games in the admin panel
+ */
 export const useGameManager = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
   const { toast } = useToast();
 
   const fetchGames = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await gamesApi.getAll();
-      setGames(data || []);
+      setGames(data);
+      setError('');
     } catch (err: any) {
-      console.error("Error fetching games:", err);
-      setError(err.message || "Failed to load games");
+      console.error('Error fetching games:', err);
+      setError(err.message || 'Failed to load games');
       toast({
-        title: "Error",
-        description: err.message || "Failed to load games",
-        variant: "destructive",
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to load games',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -32,96 +37,79 @@ export const useGameManager = () => {
     fetchGames();
   }, []);
 
-  const createGame = async (gameData: GameFormData) => {
+  const createGame = async (gameData: Omit<Game, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      setLoading(true);
-      setError(null);
       await gamesApi.create(gameData);
       toast({
-        title: "Success",
-        description: "Game created successfully",
+        id: crypto.randomUUID(),
+        title: 'Success',
+        description: 'Game created successfully',
       });
-      fetchGames();
+      await fetchGames();
     } catch (err: any) {
-      console.error("Error creating game:", err);
-      setError(err.message || "Failed to create game");
+      console.error('Error creating game:', err);
       toast({
-        title: "Error",
-        description: err.message || "Failed to create game",
-        variant: "destructive",
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to create game',
+        variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const updateGame = async (gameData: Game) => {
+  const updateGame = async (gameData: Partial<Game> & { id: string }) => {
     try {
-      setLoading(true);
-      setError(null);
       await gamesApi.update(gameData.id, gameData);
       toast({
-        title: "Success",
-        description: "Game updated successfully",
+        id: crypto.randomUUID(),
+        title: 'Success',
+        description: 'Game updated successfully',
       });
-      fetchGames();
+      await fetchGames();
     } catch (err: any) {
-      console.error("Error updating game:", err);
-      setError(err.message || "Failed to update game");
+      console.error('Error updating game:', err);
       toast({
-        title: "Error",
-        description: err.message || "Failed to update game",
-        variant: "destructive",
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to update game',
+        variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const deleteGame = async (id: string) => {
     try {
-      setLoading(true);
-      setError(null);
       await gamesApi.delete(id);
       toast({
-        title: "Success",
-        description: "Game deleted successfully",
+        id: crypto.randomUUID(),
+        title: 'Success',
+        description: 'Game deleted successfully',
       });
-      fetchGames();
+      await fetchGames();
     } catch (err: any) {
-      console.error("Error deleting game:", err);
-      setError(err.message || "Failed to delete game");
+      console.error('Error deleting game:', err);
       toast({
-        title: "Error",
-        description: err.message || "Failed to delete game",
-        variant: "destructive",
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to delete game',
+        variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const updatePosition = async (id: string, direction: 'up' | 'down') => {
     try {
-      setLoading(true);
-      setError(null);
       await gamesApi.updatePosition(id, direction);
-      fetchGames();
+      await fetchGames();
     } catch (err: any) {
-      console.error("Error updating game position:", err);
-      setError(err.message || "Failed to update game position");
+      console.error('Error updating game position:', err);
       toast({
-        title: "Error",
-        description: err.message || "Failed to update game position",
-        variant: "destructive",
+        id: crypto.randomUUID(),
+        title: 'Error',
+        description: err.message || 'Failed to update game position',
+        variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const refresh = async () => {
-    await fetchGames();
   };
 
   return {
@@ -132,6 +120,6 @@ export const useGameManager = () => {
     updateGame,
     deleteGame,
     updatePosition,
-    refresh
+    refresh: fetchGames,
   };
 };

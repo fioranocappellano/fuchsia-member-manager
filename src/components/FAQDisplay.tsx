@@ -5,19 +5,20 @@ import { useLanguage } from "@/frontend/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FAQ } from "@/frontend/types/api";
 
 const FAQDisplay = () => {
-  const [faqs, setFaqs] = useState([]);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { translations, language } = useLanguage();
+  const [error, setError] = useState<string | null>(null);
+  const { translations, locale } = useLanguage();
 
   const fetchFAQs = async () => {
     try {
       setLoading(true);
       const data = await faqsApi.getActive();
       setFaqs(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching FAQs:", error);
       setError("Failed to load FAQs. Please try again later.");
     } finally {
@@ -53,15 +54,11 @@ const FAQDisplay = () => {
           </div>
           <div className="space-y-4">
             {[...Array(5)].map((_, index) => (
-              <AccordionItem value={`item-${index}`} key={index}>
-                <AccordionTrigger>
-                  <Skeleton className="h-5 w-full" />
-                </AccordionTrigger>
-                <AccordionContent>
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                </AccordionContent>
-              </AccordionItem>
+              <div key={index} className="border border-white/10 rounded-lg p-4 bg-black/20">
+                <Skeleton className="h-5 w-full mb-2" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6 mt-1" />
+              </div>
             ))}
           </div>
         </div>
@@ -102,12 +99,12 @@ const FAQDisplay = () => {
 
         <Accordion type="single" collapsible className="w-full">
           {faqs.map((faq, index) => (
-            <AccordionItem value={`item-${index}`} key={faq.id}>
+            <AccordionItem value={`item-${index}`} key={faq.id} className="border-b border-white/10 py-2">
               <AccordionTrigger className="font-medium text-white/90">
-                {language === 'it' ? faq.question_it : faq.question_en}
+                {locale === 'it' ? faq.question_it : faq.question_en}
               </AccordionTrigger>
               <AccordionContent className="text-gray-400">
-                {language === 'it' ? faq.answer_it : faq.answer_en}
+                {locale === 'it' ? faq.answer_it : faq.answer_en}
               </AccordionContent>
             </AccordionItem>
           ))}

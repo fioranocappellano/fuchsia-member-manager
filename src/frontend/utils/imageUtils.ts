@@ -1,25 +1,21 @@
-
 /**
- * Normalizza un URL di immagine per assicurare che sia completo
- * Se l'URL è già assoluto (inizia con http:// o https://) lo restituisce invariato
- * Altrimenti, assume che sia un percorso relativo e lo converte in un URL completo
- * 
- * @param imagePath Il percorso dell'immagine da normalizzare
- * @returns L'URL normalizzato dell'immagine
+ * Normalizes image URLs to handle both relative and absolute paths
+ * @param url The image URL to normalize
+ * @returns A normalized URL
  */
-export const normalizeImageUrl = (imagePath: string): string => {
-  if (!imagePath) return "/placeholder.svg";
+export const normalizeImageUrl = (url: string): string => {
+  if (!url) return '/placeholder.svg';
   
-  // Se inizia con http:// o https://, è già un URL completo
-  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-    return imagePath;
+  // Check if URL is already absolute
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
   }
   
-  // Se inizia con /, è già un percorso relativo alla root
-  if (imagePath.startsWith("/")) {
-    return imagePath;
+  // Check if URL is already relative to public
+  if (url.startsWith('/')) {
+    return url;
   }
   
-  // Altrimenti, aggiungi / davanti
-  return `/${imagePath}`;
+  // Otherwise, assume it's relative to the assets folder
+  return `/jf-assets/${url}`;
 };
