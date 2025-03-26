@@ -15,35 +15,34 @@ const MemberManager = () => {
   const {
     members,
     loading,
-    error,
-    createMember,
-    updateMember,
-    deleteMember,
-    changePosition, // Use the function that exists in the hook
-    refresh
+    handleDelete,
+    handleUpdate,
+    handleAddMember,
+    handleEdit,
+    handleMoveItem,
   } = useMemberManager();
 
   // Handler functions to map to expected props
-  const handleEdit = (member: Member) => setEditingMember(member);
-  const handleDelete = deleteMember;
+  const onEdit = handleEdit || ((member: Member) => setEditingMember(member));
+  const onDelete = handleDelete;
   
-  const handleUpdate = async (member: Partial<Member>) => {
-    if (editingMember) {
-      await updateMember({
-        ...member,
+  const onUpdate = async (memberData: Partial<Member>) => {
+    if (editingMember && editingMember.id) {
+      await handleUpdate({
+        ...memberData,
         id: editingMember.id
       });
     }
     setEditingMember(null);
   };
   
-  const handleAddMember = () => setDialogOpen(true);
+  const onAddMember = handleAddMember || (() => setDialogOpen(true));
   
   const toggleReordering = () => setReordering(prev => !prev);
   
-  const moveItem = async (id: string, direction: 'up' | 'down') => {
-    await changePosition(id, direction);
-  };
+  const onMoveItem = handleMoveItem || ((id: string, direction: 'up' | 'down') => {
+    console.log("Move member not implemented:", id, direction);
+  });
 
   return (
     <div>
@@ -53,7 +52,7 @@ const MemberManager = () => {
           setDialogOpen={setDialogOpen}
           reordering={reordering}
           toggleReordering={toggleReordering}
-          handleAddMember={handleAddMember}
+          handleAddMember={onAddMember}
         />
       )}
       
@@ -64,7 +63,7 @@ const MemberManager = () => {
       {editingMember ? (
         <MemberEditForm 
           member={editingMember} 
-          onSave={handleUpdate} 
+          onSave={onUpdate} 
           onCancel={() => setEditingMember(null)} 
         />
       ) : (
@@ -72,9 +71,9 @@ const MemberManager = () => {
           members={members}
           loading={loading}
           reordering={reordering}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onMoveItem={moveItem}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onMoveItem={onMoveItem}
         />
       )}
     </div>

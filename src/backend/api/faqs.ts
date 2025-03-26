@@ -28,6 +28,13 @@ export const faqsApi = {
   },
 
   /**
+   * Alias for getAll that frontend components can use
+   */
+  getAllForAdmin: async (): Promise<FAQ[]> => {
+    return faqsApi.getAll();
+  },
+
+  /**
    * Fetches active FAQs from the database
    */
   getActive: async (): Promise<FAQ[]> => {
@@ -188,6 +195,32 @@ export const faqsApi = {
       if (updateError2) throw updateError2;
     } catch (error) {
       console.error("Error updating FAQ position:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Helper method to swap positions of two FAQs
+   */
+  swapPositions: async (faq1: { id: string, position: number }, faq2: { id: string, position: number }): Promise<void> => {
+    try {
+      // Update first FAQ
+      const { error: error1 } = await supabase
+        .from("faqs")
+        .update({ position: faq2.position })
+        .eq("id", faq1.id);
+
+      if (error1) throw error1;
+
+      // Update second FAQ
+      const { error: error2 } = await supabase
+        .from("faqs")
+        .update({ position: faq1.position })
+        .eq("id", faq2.id);
+
+      if (error2) throw error2;
+    } catch (error) {
+      console.error("Error swapping FAQ positions:", error);
       throw error;
     }
   }

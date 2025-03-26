@@ -15,21 +15,21 @@ const GameManager = () => {
   const {
     games,
     loading,
-    error,
-    createGame,
-    updateGame,
-    deleteGame, 
-    updatePosition,
-    refresh
+    fetchGames,
+    handleDelete,
+    handleUpdate,
+    handleAddGame,
+    handleEdit,
+    moveItem,
   } = useGameManager();
 
   // Handlers to map to the expected API
-  const handleEdit = (game: Game) => setEditingGame(game);
-  const handleDelete = deleteGame;
+  const onEdit = handleEdit || ((game: Game) => setEditingGame(game));
+  const onDelete = handleDelete;
   
-  const handleUpdate = async (formData: any) => {
+  const onUpdate = async (formData: any) => {
     if (editingGame) {
-      await updateGame({
+      await handleUpdate({
         ...formData,
         id: editingGame.id,
         position: editingGame.position
@@ -38,16 +38,14 @@ const GameManager = () => {
     setEditingGame(null);
   };
   
-  const handleAddGame = () => setDialogOpen(true);
+  const onAddGame = handleAddGame || (() => setDialogOpen(true));
   
   const toggleReordering = () => setReordering(prev => !prev);
   
-  const moveItem = async (index: number, direction: 'up' | 'down') => {
-    const game = games[index];
-    if (game?.id) {
-      await updatePosition(game.id, direction);
-    }
-  };
+  const onMoveItem = moveItem || (async (id: string, direction: 'up' | 'down') => {
+    // Default implementation if moveItem isn't provided
+    console.log("Move item not implemented:", id, direction);
+  });
 
   return (
     <div>
@@ -57,7 +55,7 @@ const GameManager = () => {
           setDialogOpen={setDialogOpen}
           reordering={reordering}
           toggleReordering={toggleReordering}
-          handleAddGame={handleAddGame}
+          handleAddGame={onAddGame}
         />
       )}
       
@@ -68,7 +66,7 @@ const GameManager = () => {
       {editingGame ? (
         <GameEditForm 
           game={editingGame} 
-          onSave={handleUpdate} 
+          onSave={onUpdate} 
           onCancel={() => setEditingGame(null)} 
         />
       ) : (
@@ -76,9 +74,9 @@ const GameManager = () => {
           games={games}
           loading={loading}
           reordering={reordering}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onMoveItem={moveItem}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onMoveItem={onMoveItem}
         />
       )}
     </div>

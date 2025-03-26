@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Game } from "../types/GameTypes";
+import { Game } from "@/frontend/types/api";
 import GameCard from "./GameCard";
 import { Loader2 } from "lucide-react";
 
@@ -38,7 +38,7 @@ const GameList: React.FC<GameListProps> = ({
           reordering={reordering}
           onEdit={onEdit}
           onDelete={onDelete}
-          onMoveItem={onMoveItem}
+          onMoveItem={(direction) => onMoveItem(game.id, direction)}
           isFirst={index === 0}
           isLast={index === games.length - 1}
         />

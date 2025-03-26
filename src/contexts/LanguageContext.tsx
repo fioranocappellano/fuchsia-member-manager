@@ -1,51 +1,43 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import it from "../locales/it";
+import en from "../locales/en";
 
-import { createContext, useState, useContext, ReactNode } from "react";
-import { it } from "../locales/it";
-import { en } from "../locales/en";
-
-type Locale = "it" | "en";
-type Translations = typeof it & typeof en;
-
-interface LanguageContextType {
-  locale: Locale;
-  language: Locale;
-  translations: Translations;
-  setLocale: (locale: Locale) => void;
+interface LanguageContextProps {
+  locale: string;
+  translations: any;
+  setLocale: (locale: string) => void;
 }
 
-const translations = {
-  it: it as Translations,
-  en: en as Translations,
-};
-
-const LanguageContext = createContext<LanguageContextType>({
-  locale: "it",
-  language: "it",
-  translations: translations.it,
+const LanguageContext = createContext<LanguageContextProps>({
+  locale: "en",
+  translations: en,
   setLocale: () => {},
 });
 
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [locale, setLocale] = useState<Locale>("it");
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [locale, setLocale] = useState(localStorage.getItem("locale") || "en");
+  const [translations, setTranslations] = useState(locale === "it" ? it : en);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const value: LanguageContextType = {
-    locale,
-    language: locale,
-    translations: translations[locale],
-    setLocale,
-  };
+  useEffect(() => {
+    localStorage.setItem("locale", locale);
+    setTranslations(locale === "it" ? it : en);
+    
+    // Update the document's lang attribute
+    document.documentElement.lang = locale;
+
+    // Update the URL to include the locale
+    const newPathname = `/${locale}${location.pathname}`;
+    navigate(newPathname, { replace: true });
+  }, [locale, navigate, location]);
 
   return (
-    <LanguageContext.Provider value={value}>
+    <LanguageContext.Provider value={{ locale, translations, setLocale }}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
-  }
-  return context;
-};
+export const useLanguage = () => useContext(LanguageContext);

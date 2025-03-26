@@ -46,7 +46,7 @@ const FAQManager = () => {
     <div>
       {!editingFaq && (
         <FAQManagerHeader
-          onAddFAQ={handleAddFaq}
+          handleAddFAQ={handleAddFaq}
           reordering={reordering}
           setDialogOpen={setDialogOpen}
           toggleReordering={toggleReordering}
@@ -59,7 +59,7 @@ const FAQManager = () => {
 
       {editingFaq ? (
         <FAQForm 
-          initialData={editingFaq} 
+          faq={editingFaq} 
           onSave={handleUpdate} 
           onCancel={() => initEditingFaq(null)} 
         />
@@ -69,7 +69,8 @@ const FAQManager = () => {
           loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onMoveItem={moveItem}
+          moveItem={moveItem}
+          reordering={reordering}
         />
       )}
     </div>
