@@ -1,160 +1,193 @@
 
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Game } from "@/frontend/types/api";
-import { gamesApi } from "@/backend/api";
+import { useState, useEffect } from 'react';
+import { useToast } from '@/frontend/hooks/use-toast';
+import { Game } from '@/frontend/types/api';
+import { gamesApi } from '@/backend/api';
 
-export const useGameManager = () => {
+/**
+ * Hook for managing games
+ */
+export function useGameManager() {
   const [games, setGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editingGame, setEditingGame] = useState<Game | null>(null);
-  const [reordering, setReordering] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const { toast } = useToast();
 
-  const fetchGames = async () => {
+  // Load games on mount
+  useEffect(() => {
+    loadGames();
+  }, []);
+
+  /**
+   * Load all games from the API
+   */
+  const loadGames = async () => {
     try {
       setLoading(true);
-      const fetchedGames = await gamesApi.getAll();
-      setGames(fetchedGames);
-    } catch (error: any) {
-      console.error("Error fetching games:", error);
+      setError('');
+      const data = await gamesApi.getAll();
+      setGames(data);
+    } catch (err: any) {
+      console.error('Error loading games:', err);
+      setError(err.message || 'Failed to load games');
       toast({
-        title: "Error fetching games",
-        description: error.message,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to load games',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchGames();
-  }, []);
-
-  const handleEdit = (game: Game) => {
-    setEditingGame(game);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this game?")) {
-      try {
-        await gamesApi.delete(id);
-
-        toast({
-          title: "Game deleted",
-          description: "The game has been deleted successfully",
-        });
-
-        // Refresh the list after deletion
-        fetchGames();
-      } catch (error: any) {
-        console.error("Error deleting game:", error);
-        toast({
-          title: "Error deleting game",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleUpdate = async (values: any) => {
+  /**
+   * Add a new game
+   */
+  const addGame = async (gameData: Omit<Game, 'id' | 'created_at'>) => {
     try {
-      const updatedGame = await gamesApi.update(editingGame!.id, {
-        tournament: values.tournament,
-        phase: values.phase,
-        format: values.format,
-        players: values.players,
-        description_it: values.description_it,
-        description_en: values.description_en,
-        image_url: values.image_url,
-        replay_url: values.replay_url,
-        position: editingGame!.position
-      });
-
+      setLoading(true);
+      setError('');
+      
+      const newGame = await gamesApi.create(gameData);
+      
+      setGames(prevGames => [...prevGames, newGame]);
+      
       toast({
-        title: "Game updated",
-        description: "The game has been updated successfully",
+        title: 'Success',
+        description: 'Game added successfully',
       });
-
-      setGames(games.map(g => g.id === editingGame!.id ? updatedGame : g));
-      setEditingGame(null);
-    } catch (error: any) {
-      console.error("Error updating game:", error);
+      
+      return newGame;
+    } catch (err: any) {
+      console.error('Error adding game:', err);
+      setError(err.message || 'Failed to add game');
       toast({
-        title: "Error updating game",
-        description: error.message,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to add game',
+        variant: 'destructive',
       });
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAddGame = () => {
-    // Refresh all games to get the correct order
-    fetchGames();
-  };
-
-  const toggleReordering = () => {
-    setReordering(!reordering);
-    // Close dialog when reordering
-    if (!reordering) {
-      setDialogOpen(false);
-    }
-  };
-
-  const moveItem = async (id: string, direction: 'up' | 'down') => {
+  /**
+   * Update an existing game
+   */
+  const updateGame = async (id: string, gameData: Partial<Game>) => {
     try {
-      const currentIndex = games.findIndex(game => game.id === id);
-      if (
-        (direction === 'up' && currentIndex === 0) || 
-        (direction === 'down' && currentIndex === games.length - 1)
-      ) {
-        return;
+      setLoading(true);
+      setError('');
+      
+      const updatedGame = await gamesApi.update(id, gameData);
+      
+      setGames(prevGames => 
+        prevGames.map(game => 
+          game.id === id ? updatedGame : game
+        )
+      );
+      
+      if (selectedGame?.id === id) {
+        setSelectedGame(updatedGame);
       }
-
-      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
       
-      // Get the two games we're swapping
-      const game1 = games[currentIndex];
-      const game2 = games[newIndex];
-      
-      // Swap their positions
-      const tempPosition = game1.position;
-      game1.position = game2.position;
-      game2.position = tempPosition;
-      
-      // Update both games with swapped positions
-      await gamesApi.swapPositions(game1, game2);
-      
-      // Refresh the games to get the updated order
-      fetchGames();
-      
-    } catch (error: any) {
-      console.error("Error updating position:", error);
       toast({
-        title: "Error updating position",
-        description: error.message,
-        variant: "destructive",
+        title: 'Success',
+        description: 'Game updated successfully',
       });
+      
+      return updatedGame;
+    } catch (err: any) {
+      console.error('Error updating game:', err);
+      setError(err.message || 'Failed to update game');
+      toast({
+        title: 'Error',
+        description: 'Failed to update game',
+        variant: 'destructive',
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Delete a game
+   */
+  const deleteGame = async (id: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      await gamesApi.deleteGame(id);
+      
+      setGames(prevGames => prevGames.filter(game => game.id !== id));
+      
+      if (selectedGame?.id === id) {
+        setSelectedGame(null);
+      }
+      
+      toast({
+        title: 'Success',
+        description: 'Game deleted successfully',
+      });
+    } catch (err: any) {
+      console.error('Error deleting game:', err);
+      setError(err.message || 'Failed to delete game');
+      toast({
+        title: 'Error',
+        description: 'Failed to delete game',
+        variant: 'destructive',
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Change the position of a game
+   */
+  const changePosition = async (id: string, direction: 'up' | 'down') => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      await gamesApi.updatePosition(id, direction);
+      
+      // Reload games to get the updated positions
+      await loadGames();
+      
+      toast({
+        title: 'Success',
+        description: `Game moved ${direction} successfully`,
+      });
+    } catch (err: any) {
+      console.error('Error changing game position:', err);
+      setError(err.message || 'Failed to change game position');
+      toast({
+        title: 'Error',
+        description: 'Failed to change game position',
+        variant: 'destructive',
+      });
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
     games,
+    selectedGame,
+    setSelectedGame,
     loading,
-    editingGame,
-    reordering,
-    dialogOpen,
-    setDialogOpen,
-    fetchGames,
-    handleEdit,
-    handleDelete,
-    handleUpdate,
-    handleAddGame,
-    toggleReordering,
-    moveItem,
-    setEditingGame
+    error,
+    loadGames,
+    addGame,
+    updateGame,
+    deleteGame,
+    changePosition,
   };
-};
+}

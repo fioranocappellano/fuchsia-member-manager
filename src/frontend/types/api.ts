@@ -1,44 +1,50 @@
 
 /**
- * Common type definitions used across the application
+ * User type for authentication
  */
+export interface User {
+  id: string;
+  email: string;
+  role?: string;
+}
 
 /**
- * Member data type
+ * Member type for team members
  */
 export interface Member {
   id: string;
   name: string;
-  image: string;
   role: string;
-  achievements?: string[];
-  join_date: string;
   smogon?: string;
-  position: number;
+  image: string;
+  achievements?: string[];
+  join_date?: string;
+  position?: number;
   created_at?: string;
+  updated_at?: string;
 }
 
 /**
- * Game data type
+ * Game type for best games showcase
  */
 export interface Game {
   id: string;
   tournament: string;
   phase: string;
   format: string;
-  players: string[];
-  replay_url: string;
-  image_url?: string;
+  players: string;
   winner: string;
-  stats?: string;
+  replay_url: string;
+  image_url: string;
   description_en: string;
   description_it: string;
   position: number;
   created_at?: string;
+  updated_at?: string;
 }
 
 /**
- * FAQ data type
+ * FAQ type for frequently asked questions
  */
 export interface FAQ {
   id: string;
@@ -53,7 +59,19 @@ export interface FAQ {
 }
 
 /**
- * Footer resource data type
+ * New FAQ type for creating new entries
+ */
+export interface NewFAQ {
+  question_en: string;
+  question_it: string;
+  answer_en: string;
+  answer_it: string;
+  position?: number;
+  is_active?: boolean;
+}
+
+/**
+ * Footer resource type for footer links and resources
  */
 export interface FooterResource {
   id: string;
@@ -62,24 +80,6 @@ export interface FooterResource {
   url: string;
   category: string;
   position: number;
-  is_active: boolean;
   created_at?: string;
-}
-
-/**
- * User data type
- */
-export interface User {
-  id: string;
-  email: string;
-  role: 'admin' | 'user';
-}
-
-/**
- * Auth response data type
- */
-export interface AuthResponse {
-  user: User | null;
-  session?: any;
-  error?: string;
+  updated_at?: string;
 }

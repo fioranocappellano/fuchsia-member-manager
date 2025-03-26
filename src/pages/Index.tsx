@@ -1,10 +1,14 @@
 
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { useLanguage } from "@/frontend/contexts/LanguageContext";
-import { Button } from "@/frontend/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import JudgmentFleetBanner from "@/frontend/components/JudgmentFleetBanner";
+import Hero from "@/components/Hero";
+import Community from "@/components/Community";
+import TopMembers from "@/components/TopMembers";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -14,12 +18,9 @@ const Index = () => {
     <>
       <Helmet>
         <title>Judgment Fleet | Elite Pokémon Team</title>
-        <meta 
-          name="description" 
-          content={translations.siteDescription} 
-        />
+        <meta name="description" content={translations.siteDescription} />
       </Helmet>
-      
+        
       <JudgmentFleetBanner />
       
       <main className="container mx-auto px-4 py-16 text-center">
@@ -32,7 +33,7 @@ const Index = () => {
         </p>
         
         <Button 
-          onClick={() => navigate('/home')}
+          onClick={() => navigate('/home')} 
           size="lg"
           className="bg-[#D946EF] hover:bg-[#D946EF]/90 px-8 py-6 text-lg"
         >
@@ -40,6 +41,11 @@ const Index = () => {
           <ArrowRight className="ml-2" />
         </Button>
       </main>
+      
+      <Hero />
+      <Community />
+      <TopMembers />
+      <Footer />
     </>
   );
 };

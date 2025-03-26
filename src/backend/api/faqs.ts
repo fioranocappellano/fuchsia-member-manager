@@ -3,156 +3,187 @@ import { supabase } from "@/integrations/supabase/client";
 import { FAQ, NewFAQ } from "@/frontend/types/api";
 
 /**
- * Recupera tutte le FAQ attive ordinate per posizione
- * @returns Lista di tutte le FAQ attive ordinate per posizione
+ * Fetches all FAQs from the database
  */
 export const getAll = async (): Promise<FAQ[]> => {
-  const { data, error } = await supabase
-    .from("faqs")
-    .select("*")
-    .eq("is_active", true)
-    .order("position", { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from("faqs")
+      .select("*")
+      .order("position", { ascending: true });
 
-  if (error) {
+    if (error) {
+      throw error;
+    }
+
+    return data as FAQ[];
+  } catch (error) {
     console.error("Error fetching FAQs:", error);
     throw error;
   }
-
-  return data || [];
 };
 
 /**
- * Recupera tutte le FAQ (attive e non attive) per gestione admin
- * @returns Lista di tutte le FAQ ordinate per posizione
+ * Fetches all active FAQs from the database
  */
-export const getAllForAdmin = async (): Promise<FAQ[]> => {
-  const { data, error } = await supabase
-    .from("faqs")
-    .select("*")
-    .order("position", { ascending: true });
+export const getAllActive = async (): Promise<FAQ[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("faqs")
+      .select("*")
+      .eq("is_active", true)
+      .order("position", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching FAQs for admin:", error);
+    if (error) {
+      throw error;
+    }
+
+    return data as FAQ[];
+  } catch (error) {
+    console.error("Error fetching active FAQs:", error);
     throw error;
   }
-
-  return data || [];
 };
 
 /**
- * Recupera una FAQ specifica tramite ID
- * @param id ID della FAQ da recuperare
- * @returns Dettagli della FAQ richiesta
+ * Fetches a single FAQ by ID
  */
 export const getById = async (id: string): Promise<FAQ> => {
-  const { data, error } = await supabase
-    .from("faqs")
-    .select("*")
-    .eq("id", id)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("faqs")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-  if (error) {
-    console.error(`Error fetching FAQ ${id}:`, error);
+    if (error) {
+      throw error;
+    }
+
+    return data as FAQ;
+  } catch (error) {
+    console.error(`Error fetching FAQ with ID ${id}:`, error);
     throw error;
   }
-
-  return data;
 };
 
 /**
- * Crea una nuova FAQ
- * @param faq Dati della nuova FAQ da creare
- * @returns La FAQ creata con l'ID generato
+ * Creates a new FAQ
  */
-export const create = async (faq: NewFAQ): Promise<FAQ> => {
-  const { data, error } = await supabase
-    .from("faqs")
-    .insert(faq)
-    .select()
-    .single();
+export const create = async (faqData: NewFAQ): Promise<FAQ> => {
+  try {
+    const { data, error } = await supabase
+      .from("faqs")
+      .insert([faqData])
+      .select()
+      .single();
 
-  if (error) {
+    if (error) {
+      throw error;
+    }
+
+    return data as FAQ;
+  } catch (error) {
     console.error("Error creating FAQ:", error);
     throw error;
   }
-
-  return data;
 };
 
 /**
- * Aggiorna una FAQ esistente
- * @param id ID della FAQ da aggiornare
- * @param faq Dati aggiornati della FAQ
- * @returns La FAQ aggiornata
+ * Updates an existing FAQ
  */
-export const update = async (id: string, faq: Partial<FAQ>): Promise<FAQ> => {
-  const { data, error } = await supabase
-    .from("faqs")
-    .update(faq)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error(`Error updating FAQ ${id}:`, error);
-    throw error;
-  }
-
-  return data;
-};
-
-/**
- * Elimina una FAQ
- * @param id ID della FAQ da eliminare
- * @returns true se l'eliminazione è avvenuta con successo
- */
-export const delete_ = async (id: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from("faqs")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error(`Error deleting FAQ ${id}:`, error);
-    throw error;
-  }
-
-  return true;
-};
-
-/**
- * Scambia la posizione di due FAQ per il riordinamento
- * @param faq1 Prima FAQ da scambiare
- * @param faq2 Seconda FAQ da scambiare
- * @returns true se lo scambio è avvenuto con successo
- */
-export const swapPositions = async (faq1: FAQ, faq2: FAQ): Promise<boolean> => {
+export const update = async (id: string, faqData: Partial<FAQ>): Promise<FAQ> => {
   try {
-    // Aggiorna la prima FAQ
-    await supabase
+    const { data, error } = await supabase
       .from("faqs")
-      .update({ position: faq1.position })
-      .eq("id", faq1.id);
+      .update(faqData)
+      .eq("id", id)
+      .select()
+      .single();
 
-    // Aggiorna la seconda FAQ
-    await supabase
-      .from("faqs")
-      .update({ position: faq2.position })
-      .eq("id", faq2.id);
+    if (error) {
+      throw error;
+    }
 
-    return true;
+    return data as FAQ;
   } catch (error) {
-    console.error("Error swapping FAQ positions:", error);
+    console.error(`Error updating FAQ with ID ${id}:`, error);
     throw error;
   }
 };
 
-export const faqsApi = {
-  getAll,
-  getAllForAdmin,
-  getById,
-  create,
-  update,
-  delete: delete_,
-  swapPositions
+/**
+ * Deletes a FAQ
+ */
+export const deleteFAQ = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from("faqs")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    console.error(`Error deleting FAQ with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Updates the position of a FAQ (move up or down)
+ */
+export const updatePosition = async (id: string, direction: 'up' | 'down'): Promise<void> => {
+  try {
+    // First, get all FAQs to determine the current positions
+    const { data: faqs, error: fetchError } = await supabase
+      .from("faqs")
+      .select("id, position")
+      .order("position", { ascending: true });
+
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    // Find the current FAQ and its position
+    const faqIndex = faqs.findIndex(faq => faq.id === id);
+    if (faqIndex === -1) {
+      throw new Error("FAQ not found");
+    }
+
+    // Determine the swap index based on direction
+    let swapIndex;
+    if (direction === 'up' && faqIndex > 0) {
+      swapIndex = faqIndex - 1;
+    } else if (direction === 'down' && faqIndex < faqs.length - 1) {
+      swapIndex = faqIndex + 1;
+    } else {
+      // Already at the top or bottom
+      return;
+    }
+
+    // Swap positions
+    const currentPos = faqs[faqIndex].position;
+    const swapPos = faqs[swapIndex].position;
+    const swapId = faqs[swapIndex].id;
+
+    // Update both FAQs' positions
+    const { error: updateError1 } = await supabase
+      .from("faqs")
+      .update({ position: swapPos })
+      .eq("id", id);
+
+    if (updateError1) throw updateError1;
+
+    const { error: updateError2 } = await supabase
+      .from("faqs")
+      .update({ position: currentPos })
+      .eq("id", swapId);
+
+    if (updateError2) throw updateError2;
+  } catch (error) {
+    console.error("Error updating FAQ position:", error);
+    throw error;
+  }
 };

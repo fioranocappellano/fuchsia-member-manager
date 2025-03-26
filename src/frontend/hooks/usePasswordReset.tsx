@@ -1,43 +1,106 @@
 
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/frontend/hooks/use-toast';
-import { authApi } from '@/backend/api';
 
+/**
+ * Hook for password reset functionality
+ */
 export function usePasswordReset() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = async (email: string): Promise<{ success: boolean }> => {
     try {
-      setIsLoading(true);
+      setLoading(true);
       
-      const result = await authApi.resetPassword(email);
-      
-      if (result.success) {
+      // Validate email
+      if (!email || !email.includes('@')) {
         toast({
-          title: "Password reset email sent",
-          description: "Check your email for a link to reset your password",
+          title: 'Invalid Email',
+          description: 'Please enter a valid email address',
+          variant: 'destructive',
         });
+        return { success: false };
       }
       
-      return result;
-    } catch (error: any) {
-      console.error("Error sending password reset:", error);
-      
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send password reset email",
-        variant: "destructive",
+      // Send password reset email
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       
-      return { success: false, error };
+      if (error) throw error;
+      
+      toast({
+        title: 'Password Reset Email Sent',
+        description: 'Check your inbox for the password reset link',
+      });
+      
+      return { success: true };
+      
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      
+      toast({
+        title: 'Password Reset Failed',
+        description: error.message || 'An error occurred while sending the password reset email',
+        variant: 'destructive',
+      });
+      
+      return { success: false };
+      
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const updatePassword = async (newPassword: string): Promise<{ success: boolean }> => {
+    try {
+      setLoading(true);
+      
+      // Validate password
+      if (!newPassword || newPassword.length < 6) {
+        toast({
+          title: 'Invalid Password',
+          description: 'Password must be at least 6 characters long',
+          variant: 'destructive',
+        });
+        return { success: false };
+      }
+      
+      // Update the password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Password Updated',
+        description: 'Your password has been successfully updated',
+      });
+      
+      return { success: true };
+      
+    } catch (error: any) {
+      console.error('Password update error:', error);
+      
+      toast({
+        title: 'Password Update Failed',
+        description: error.message || 'An error occurred while updating your password',
+        variant: 'destructive',
+      });
+      
+      return { success: false };
+      
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
     resetPassword,
-    isLoading
+    updatePassword,
+    loading,
   };
 }

@@ -2,139 +2,144 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Member } from "@/frontend/types/api";
 
-// Funzioni per la gestione dei membri del team
-
 /**
- * Recupera tutti i membri ordinati per posizione
- * @returns Lista di tutti i membri ordinati per posizione
+ * Fetches all team members from the database
  */
 export const getAll = async (): Promise<Member[]> => {
-  const { data, error } = await supabase
-    .from("members")
-    .select("*")
-    .order("position", { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from("members")
+      .select("*")
+      .order("position", { ascending: true });
 
-  if (error) {
+    if (error) {
+      throw error;
+    }
+
+    return data as Member[];
+  } catch (error) {
     console.error("Error fetching members:", error);
     throw error;
   }
-
-  return data || [];
 };
 
 /**
- * Recupera un membro specifico tramite ID
- * @param id ID del membro da recuperare
- * @returns Dettagli del membro richiesto
+ * Fetches a single team member by ID
  */
 export const getById = async (id: string): Promise<Member> => {
-  const { data, error } = await supabase
-    .from("members")
-    .select("*")
-    .eq("id", id)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("members")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-  if (error) {
-    console.error(`Error fetching member ${id}:`, error);
+    if (error) {
+      throw error;
+    }
+
+    return data as Member;
+  } catch (error) {
+    console.error(`Error fetching member with ID ${id}:`, error);
     throw error;
   }
-
-  return data;
 };
 
 /**
- * Crea un nuovo membro
- * @param member Dati del nuovo membro da creare
- * @returns Il membro creato con l'ID generato
+ * Creates a new team member
  */
-export const create = async (member: Omit<Member, "id">): Promise<Member> => {
-  const { data, error } = await supabase
-    .from("members")
-    .insert(member)
-    .select()
-    .single();
+export const create = async (memberData: Omit<Member, "id">): Promise<Member> => {
+  try {
+    // Ensure member has required fields
+    const member = {
+      ...memberData,
+      achievements: memberData.achievements || [],
+    };
 
-  if (error) {
+    const { data, error } = await supabase
+      .from("members")
+      .insert([member])
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data as Member;
+  } catch (error) {
     console.error("Error creating member:", error);
     throw error;
   }
-
-  return data;
 };
 
 /**
- * Aggiorna un membro esistente
- * @param id ID del membro da aggiornare
- * @param member Dati aggiornati del membro
- * @returns Il membro aggiornato
+ * Updates an existing team member
  */
-export const update = async (id: string, member: Partial<Member>): Promise<Member> => {
-  const { data, error } = await supabase
-    .from("members")
-    .update(member)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error(`Error updating member ${id}:`, error);
-    throw error;
-  }
-
-  return data;
-};
-
-/**
- * Elimina un membro
- * @param id ID del membro da eliminare
- * @returns true se l'eliminazione è avvenuta con successo
- */
-export const delete_ = async (id: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from("members")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error(`Error deleting member ${id}:`, error);
-    throw error;
-  }
-
-  return true;
-};
-
-/**
- * Scambia la posizione di due membri per il riordinamento
- * @param member1 Primo membro da scambiare
- * @param member2 Secondo membro da scambiare
- * @returns true se lo scambio è avvenuto con successo
- */
-export const swapPositions = async (member1: Member, member2: Member): Promise<boolean> => {
+export const update = async (id: string, memberData: Partial<Member>): Promise<Member> => {
   try {
-    // Aggiorna il primo membro
-    await supabase
+    const { data, error } = await supabase
       .from("members")
-      .update({ position: member1.position })
+      .update(memberData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data as Member;
+  } catch (error) {
+    console.error(`Error updating member with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Deletes a team member
+ */
+export const deleteMember = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from("members")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    console.error(`Error deleting member with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Swaps the positions of two team members
+ */
+export const swapPositions = async (member1: Member, member2: Member): Promise<void> => {
+  try {
+    // Swap positions
+    const pos1 = member1.position;
+    const pos2 = member2.position;
+    
+    const { error: error1 } = await supabase
+      .from("members")
+      .update({ position: pos2 })
       .eq("id", member1.id);
-
-    // Aggiorna il secondo membro
-    await supabase
+      
+    if (error1) throw error1;
+    
+    const { error: error2 } = await supabase
       .from("members")
-      .update({ position: member2.position })
+      .update({ position: pos1 })
       .eq("id", member2.id);
-
-    return true;
+      
+    if (error2) throw error2;
+    
   } catch (error) {
     console.error("Error swapping member positions:", error);
     throw error;
   }
-};
-
-export const membersApi = {
-  getAll,
-  getById,
-  create,
-  update,
-  delete: delete_,
-  swapPositions
 };
