@@ -81,15 +81,45 @@ export const it = {
   // Admin
   adminDashboard: "Pannello di Amministrazione",
   adminOverview: "Panoramica",
-  adminMembers: "Membri del Team",
-  adminGames: "Partite",
-  adminFAQ: "FAQ",
+  adminMembersManage: "Membri del Team",
+  adminGamesManage: "Partite",
+  adminFAQManage: "FAQ",
   adminResources: "Risorse Footer",
   adminWelcome: "Benvenuto al pannello amministratore",
   adminDescription: "Gestisci i membri del team, le partite migliori, le FAQ e altre risorse del sito",
-  adminMembers: "Gestione Membri",
-  adminGames: "Gestione Partite",
-  adminFAQ: "Gestione FAQ",
   adminSiteResources: "Risorse del Sito",
   adminSettings: "Impostazioni",
+  
+  // Footer
+  footerTagline: "Il meglio della scena competitiva italiana di Pokémon",
+  siteLinks: "Collegamenti del Sito",
+  usefulResources: "Risorse Utili",
+  communityLinks: "Collegamenti della Community",
+  footerDisclaimer: "Pokémon e i media correlati sono marchi registrati di The Pokémon Company, Nintendo, Game Freak e Creatures Inc.",
+  
+  // Hero
+  heroDescription: "Riuniamo i migliori giocatori italiani per competere al massimo livello nelle battaglie Pokémon.",
+  scrollForMore: "Scorri per saperne di più",
+  
+  // CTA
+  readyToJoin: "Pronto a Unirti all'Elite?",
+  ctaDescription: "Unisciti alla nostra community di giocatori competitivi di Pokémon e porta il tuo gioco al livello successivo.",
+  joinToTwitter: "Unisciti via Twitter",
+  alreadyMember: "Sei già un membro? Controlla il tuo Discord per i tornei più recenti.",
+  
+  // Add missing translations
+  ourCommunity: "La Nostra Community",
+  elitePokemonTitle: "Team Elite di Pokémon",
+  contactsFounder: "Contatti e Fondatori",
+  resourcesSection: "Risorse Utili",
+  italianCompetitiveSmogon: "Smogon Competitivo Italiano",
+  discoverMore: "Scopri di Più",
+  followOnTwitter: "Seguici su Twitter",
+  ourPlayers: "I Nostri Giocatori",
+  playersDescription: "Incontra il nostro talentuoso team di giocatori competitivi di Pokémon.",
+  retry: "Riprova",
+  playersSection: "Hall of Fame",
+  checkBestBattles: "Scopri le Nostre Migliori Battaglie",
+  viewBestGames: "Visualizza le Migliori Partite",
+  judgmentFleetBanner: 'Benvenuto a Judgment Fleet - Team Elite di Tornei Pokémon'
 };

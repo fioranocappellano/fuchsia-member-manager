@@ -15,11 +15,12 @@ export const useFAQManager = () => {
   const fetchFaqs = async () => {
     try {
       setLoading(true);
-      const fetchedFaqs = await faqsApi.getAllForAdmin();
+      const fetchedFaqs = await faqsApi.getAll();
       setFaqs(fetchedFaqs);
     } catch (error: any) {
       console.error("Error fetching FAQs:", error);
       toast({
+        id: crypto.randomUUID(),
         title: "Error fetching FAQs",
         description: error.message,
         variant: "destructive",
@@ -43,6 +44,7 @@ export const useFAQManager = () => {
         await faqsApi.delete(id);
 
         toast({
+          id: crypto.randomUUID(),
           title: "FAQ deleted",
           description: "The FAQ has been deleted successfully",
         });
@@ -51,6 +53,7 @@ export const useFAQManager = () => {
       } catch (error: any) {
         console.error("Error deleting FAQ:", error);
         toast({
+          id: crypto.randomUUID(),
           title: "Error deleting FAQ",
           description: error.message,
           variant: "destructive",
@@ -64,6 +67,7 @@ export const useFAQManager = () => {
       const updatedFaq = await faqsApi.update(editingFaq!.id, values);
 
       toast({
+        id: crypto.randomUUID(),
         title: "FAQ updated",
         description: "The FAQ has been updated successfully",
       });
@@ -73,6 +77,7 @@ export const useFAQManager = () => {
     } catch (error: any) {
       console.error("Error updating FAQ:", error);
       toast({
+        id: crypto.randomUUID(),
         title: "Error updating FAQ",
         description: error.message,
         variant: "destructive",
@@ -90,6 +95,7 @@ export const useFAQManager = () => {
       });
 
       toast({
+        id: crypto.randomUUID(),
         title: isActive ? "FAQ deactivated" : "FAQ activated",
         description: `The FAQ is now ${isActive ? 'hidden' : 'visible'} on the site`
       });
@@ -98,6 +104,7 @@ export const useFAQManager = () => {
     } catch (error: any) {
       console.error("Error toggling FAQ visibility:", error);
       toast({
+        id: crypto.randomUUID(),
         title: "Error updating FAQ",
         description: error.message,
         variant: "destructive",
@@ -105,8 +112,24 @@ export const useFAQManager = () => {
     }
   };
 
-  const handleAddFaq = () => {
-    fetchFaqs();
+  const handleAddFaq = async (newFaqData: NewFAQ) => {
+    try {
+      await faqsApi.create(newFaqData);
+      toast({
+        id: crypto.randomUUID(),
+        title: "FAQ added",
+        description: "The FAQ has been added successfully"
+      });
+      fetchFaqs();
+    } catch (error: any) {
+      console.error("Error adding FAQ:", error);
+      toast({
+        id: crypto.randomUUID(),
+        title: "Error adding FAQ",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleReordering = () => {
@@ -118,34 +141,13 @@ export const useFAQManager = () => {
 
   const moveItem = async (id: string, direction: 'up' | 'down') => {
     try {
-      const currentIndex = faqs.findIndex(faq => faq.id === id);
-      if (
-        (direction === 'up' && currentIndex === 0) || 
-        (direction === 'down' && currentIndex === faqs.length - 1)
-      ) {
-        return;
-      }
-
-      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      
-      // Get the two faqs we're swapping
-      const faq1 = faqs[currentIndex];
-      const faq2 = faqs[newIndex];
-      
-      // Swap their positions
-      const tempPosition = faq1.position;
-      faq1.position = faq2.position;
-      faq2.position = tempPosition;
-      
-      // Update both faqs with swapped positions
-      await faqsApi.swapPositions(faq1, faq2);
-      
-      // Refresh the faqs to get the updated order
+      await faqsApi.updatePosition(id, direction);
+      // Refresh the FAQs after updating position
       fetchFaqs();
-      
     } catch (error: any) {
       console.error("Error updating position:", error);
       toast({
+        id: crypto.randomUUID(),
         title: "Error updating position",
         description: error.message,
         variant: "destructive",

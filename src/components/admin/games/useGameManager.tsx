@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +24,7 @@ export const useGameManager = () => {
       // Ensure all games have required properties
       const processedGames = (data || []).map(game => ({
         ...game,
-        winner: game.winner || "",
+        winner: game.winner || "", // Explicitly add winner property
         updated_at: game.updated_at || game.created_at || new Date().toISOString()
       })) as Game[];
       
@@ -43,6 +42,7 @@ export const useGameManager = () => {
     }
   };
 
+  // Set up a subscription for real-time updates
   useEffect(() => {
     fetchGames();
     
@@ -99,7 +99,7 @@ export const useGameManager = () => {
           phase: values.phase,
           format: values.format,
           players: values.players,
-          winner: values.winner,
+          winner: values.winner || "",
           replay_url: values.replay_url,
           image_url: values.image_url || null,
           description_en: values.description_en,
@@ -139,15 +139,15 @@ export const useGameManager = () => {
       const { error } = await supabase
         .from("best_games")
         .insert({
-          tournament: values.tournament,
-          phase: values.phase,
-          format: values.format,
-          players: values.players,
-          winner: values.winner,
-          replay_url: values.replay_url,
+          tournament: values.tournament || "",
+          phase: values.phase || "",
+          format: values.format || "",
+          players: values.players || "",
+          winner: values.winner || "",
+          replay_url: values.replay_url || "",
           image_url: values.image_url || null,
-          description_en: values.description_en,
-          description_it: values.description_it,
+          description_en: values.description_en || "",
+          description_it: values.description_it || "",
           position,
         });
 

@@ -2,12 +2,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import { FAQ, NewFAQ } from "@/frontend/types/api";
 
-/**
- * API methods for interacting with FAQs in the database
- */
 export const faqsApi = {
   /**
-   * Fetches all FAQs from the database
+   * Get all FAQs
    */
   getAll: async (): Promise<FAQ[]> => {
     try {
@@ -28,7 +25,7 @@ export const faqsApi = {
   },
 
   /**
-   * Fetches only active FAQs from the database
+   * Get active FAQs only (for public display)
    */
   getActive: async (): Promise<FAQ[]> => {
     try {
@@ -50,7 +47,7 @@ export const faqsApi = {
   },
 
   /**
-   * Fetches a FAQ by ID
+   * Get a specific FAQ by ID
    */
   getById: async (id: string): Promise<FAQ> => {
     try {
@@ -72,7 +69,7 @@ export const faqsApi = {
   },
 
   /**
-   * Creates a new FAQ
+   * Create a new FAQ
    */
   create: async (faqData: NewFAQ): Promise<FAQ> => {
     try {
@@ -94,7 +91,7 @@ export const faqsApi = {
   },
 
   /**
-   * Updates an existing FAQ
+   * Update an existing FAQ
    */
   update: async (id: string, faqData: Partial<FAQ>): Promise<FAQ> => {
     try {
@@ -117,7 +114,7 @@ export const faqsApi = {
   },
 
   /**
-   * Deletes a FAQ
+   * Delete a FAQ
    */
   delete: async (id: string): Promise<void> => {
     try {
@@ -136,7 +133,7 @@ export const faqsApi = {
   },
 
   /**
-   * Updates the position of a FAQ (move up or down)
+   * Update the position of a FAQ (move up or down)
    */
   updatePosition: async (id: string, direction: 'up' | 'down'): Promise<void> => {
     try {
@@ -193,7 +190,7 @@ export const faqsApi = {
   },
 
   /**
-   * Helper method to swap positions of two FAQs
+   * Swap positions of two FAQs 
    */
   swapPositions: async (faq1: { id: string, position: number }, faq2: { id: string, position: number }): Promise<void> => {
     try {

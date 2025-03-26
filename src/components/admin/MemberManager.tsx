@@ -45,7 +45,7 @@ const MemberManager = () => {
   
   const onAddMember = () => {
     if (handleAddMember) {
-      handleAddMember();
+      handleAddMember({});  // Passing an empty object as argument
     } else {
       setDialogOpen(true);
     }

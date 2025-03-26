@@ -47,7 +47,7 @@ const GameManager = () => {
   
   const onAddGame = () => {
     if (handleAddGame) {
-      handleAddGame();
+      handleAddGame({});  // Passing an empty object as argument
     } else {
       setDialogOpen(true);
     }

@@ -67,9 +67,10 @@ const GameManager = () => {
             onEdit={setSelectedGame}
             onDelete={deleteGame}
             onMoveItem={(id, direction) => {
+              // Convert string ID to numeric index
               const index = games.findIndex(game => game.id === id);
               if (index !== -1) {
-                handlePositionChange(index, direction);
+                handlePositionChange(index, direction).catch(console.error);
               }
             }}
           />
