@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Sitemap: https://judgmentfleet.netlify.app/sitemap.xml
