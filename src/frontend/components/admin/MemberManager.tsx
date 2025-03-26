@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMemberManager } from '@/frontend/hooks/useMemberManager';
 import MemberManagerHeader from '@/frontend/components/admin/members/MemberManagerHeader';
@@ -33,21 +32,25 @@ const MemberManager = () => {
 
   // Form submission handler
   const handleSave = async (memberData: Partial<Member>) => {
-    if (selectedMember && selectedMember.id) {
-      // Update existing member
-      await updateMember({
-        ...memberData,
-        id: selectedMember.id,
-        position: selectedMember.position || 0
-      });
-    } else {
-      // Create new member
-      await createMember({
-        ...memberData as Omit<Member, "id" | "created_at" | "updated_at">,
-        position: members.length + 1
-      });
+    try {
+      if (selectedMember && selectedMember.id) {
+        // Update existing member
+        await updateMember({
+          ...memberData,
+          id: selectedMember.id,
+          position: selectedMember.position || 0
+        });
+      } else {
+        // Create new member
+        await createMember({
+          ...memberData as Omit<Member, "id" | "created_at" | "updated_at">,
+          position: members.length + 1
+        });
+      }
+      setSelectedMember(null);
+    } catch (error) {
+      console.error("Error saving member:", error);
     }
-    setSelectedMember(null);
   };
 
   return (
@@ -70,10 +73,10 @@ const MemberManager = () => {
             onEdit={(member) => setSelectedMember(member)}
             onDelete={deleteMember}
             onMoveItem={(id, direction) => {
-              // Convert string ID to numeric index
-              const index = members.findIndex(member => member.id === id);
-              if (index !== -1) {
-                handlePositionChange(index, direction).catch(console.error);
+              // Convert numeric index to ID
+              const memberId = typeof id === 'number' ? members[id]?.id : id;
+              if (memberId) {
+                handlePositionChange(members.findIndex(m => m.id === memberId), direction).catch(console.error);
               }
             }}
           />

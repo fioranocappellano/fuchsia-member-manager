@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +25,7 @@ export const useGameManager = () => {
       // Ensure all games have required properties
       const processedGames = (data || []).map(game => ({
         ...game,
-        winner: game.winner || "", // Explicitly add winner property
+        winner: game.winner || "", // Add winner property if it doesn't exist
         updated_at: game.updated_at || game.created_at || new Date().toISOString()
       })) as Game[];
       

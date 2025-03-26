@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +23,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface MemberEditFormProps {
   member: Member;
-  onSave: (id: string, updatedMember: Partial<Member>) => void;
+  onSave: (memberData: Partial<Member>) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -77,7 +76,7 @@ const MemberEditForm: React.FC<MemberEditFormProps> = ({ member, onSave, onCance
         smogon: values.smogon || null,
         join_date: values.join_date || null
       };
-      await onSave(member.id, cleanedValues);
+      await onSave(cleanedValues);
     } catch (error) {
       console.error("Error updating member:", error);
     } finally {

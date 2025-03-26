@@ -67,10 +67,10 @@ const GameManager = () => {
             onEdit={setSelectedGame}
             onDelete={deleteGame}
             onMoveItem={(id, direction) => {
-              // Convert string ID to numeric index
-              const index = games.findIndex(game => game.id === id);
-              if (index !== -1) {
-                handlePositionChange(index, direction).catch(console.error);
+              // Convert numeric index to ID
+              const gameId = typeof id === 'number' ? games[id]?.id : id;
+              if (gameId) {
+                handlePositionChange(games.findIndex(g => g.id === gameId), direction).catch(console.error);
               }
             }}
           />
