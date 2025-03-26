@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useGameManager } from '@/frontend/hooks/games/useGameManager';
+import { useGameManager } from '@/frontend/hooks/useGameManager';
 import GameManagerHeader from '@/frontend/components/admin/games/GameManagerHeader';
 import GameList from '@/frontend/components/admin/games/GameList';
 import GameEditForm from '@/frontend/components/admin/games/GameEditForm';
@@ -18,7 +18,7 @@ const GameManager = () => {
     createGame,
     updateGame,
     deleteGame,
-    updatePosition: updateGamePosition,
+    updatePosition,
     refresh
   } = useGameManager();
 
@@ -26,8 +26,27 @@ const GameManager = () => {
   const handlePositionChange = async (index: number, direction: 'up' | 'down') => {
     const game = games[index];
     if (game?.id) {
-      await updateGamePosition(game.id, direction);
+      await updatePosition(game.id, direction);
     }
+  };
+
+  // Form submission handler
+  const handleSave = async (formData: any) => {
+    if (selectedGame) {
+      // Update existing game
+      await updateGame({
+        ...formData,
+        id: selectedGame.id,
+        position: selectedGame.position
+      });
+    } else {
+      // Create new game
+      await createGame({
+        ...formData,
+        position: games.length + 1
+      });
+    }
+    setSelectedGame(null);
   };
 
   return (
@@ -56,14 +75,7 @@ const GameManager = () => {
           </h2>
           <GameEditForm 
             game={selectedGame}
-            onSave={async (game) => {
-              if (selectedGame) {
-                await updateGame(game);
-              } else {
-                await createGame(game);
-              }
-              setSelectedGame(null);
-            }}
+            onSave={handleSave}
             onCancel={() => setSelectedGame(null)}
           />
         </div>

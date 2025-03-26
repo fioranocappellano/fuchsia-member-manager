@@ -44,6 +44,21 @@ export interface Game {
 }
 
 /**
+ * Game form data type
+ */
+export interface GameFormData {
+  tournament: string;
+  phase: string;
+  format: string;
+  players: string;
+  winner: string;
+  replay_url: string;
+  image_url: string;
+  description_en: string;
+  description_it: string;
+}
+
+/**
  * FAQ type for frequently asked questions
  */
 export interface FAQ {
@@ -66,7 +81,7 @@ export interface NewFAQ {
   question_it: string;
   answer_en: string;
   answer_it: string;
-  position?: number;
+  position: number;
   is_active?: boolean;
 }
 

@@ -1,3 +1,4 @@
+
 export const it = {
   homeTitle: 'Judgment Fleet - Team Pokémon competitivo',
   homeDescription:
@@ -142,4 +143,47 @@ export const it = {
   updatePasswordTitle: 'Aggiorna la tua password',
   updatePasswordDescription: 'Inserisci la tua nuova password.',
   judgmentFleetBanner: 'Benvenuti in Judgment Fleet - Team Elite di Tornei Pokémon',
+  
+  // Adding missing translations for Italian version
+  home: "Home",
+  community: "Community",
+  resources: "Risorse",
+  bestGames: "Best Games",
+  faq: "FAQ",
+  followOnTwitter: "Seguici su Twitter",
+  ourPlayers: "I Nostri Giocatori",
+  playersDescription: "Scopri i nostri talentuosi giocatori di Pokémon competitivo.",
+  retry: "Riprova",
+  noMembers: "Nessun membro disponibile al momento.",
+  playersSection: "Hall of Fame",
+  checkBestBattles: "Guarda le Nostre Migliori Battaglie",
+  viewBestGames: "Vedi Best Games",
+  
+  // Footer
+  footerTagline: "Il meglio della scena competitiva italiana di Pokémon",
+  siteLinks: "Link del Sito",
+  usefulResources: "Risorse Utili",
+  communityLinks: "Link della Community",
+  allRightsReserved: "Tutti i diritti riservati",
+  footerDisclaimer: "Pokémon e i media correlati sono marchi registrati di The Pokémon Company, Nintendo, Game Freak e Creatures Inc.",
+  
+  // Hero
+  heroTitle: "Benvenuti nel Team Elite di Tornei Pokémon",
+  heroDescription: "Riuniamo i migliori giocatori italiani per competere ai massimi livelli delle battaglie Pokémon.",
+  learnMore: "Scopri di più",
+  scrollForMore: "Scorri per saperne di più",
+  
+  // CTA
+  readyToJoin: "Pronto a Unirti all'Elite?",
+  ctaDescription: "Unisciti alla nostra community di giocatori competitivi di Pokémon e porta il tuo gioco al livello successivo.",
+  joinToTwitter: "Unisciti via Twitter",
+  alreadyMember: "Sei già un membro? Controlla il tuo Discord per gli ultimi tornei.",
+  
+  // Additional
+  ourCommunity: "La Nostra Community",
+  elitePokemonTitle: "Team Pokémon d'Elite",
+  communityDescription: "Entra a far parte della nostra appassionata community di giocatori competitivi di Pokémon.",
+  contactsFounder: "Contatti e Fondatori",
+  resourcesSection: "Risorse Utili",
+  italianCompetitiveSmogon: "Competitivo Italiano Smogon"
 };

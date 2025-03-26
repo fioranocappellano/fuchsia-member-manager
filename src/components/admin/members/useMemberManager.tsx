@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Member } from "@/types/api";
-import { membersApi } from "@/services/api";
+import { supabase } from "@/integrations/supabase/client";
+import { Member } from "@/frontend/types/api";
 
 export const useMemberManager = () => {
   const [members, setMembers] = useState<Member[]>([]);
@@ -15,8 +15,15 @@ export const useMemberManager = () => {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const fetchedMembers = await membersApi.getAll();
-      setMembers(fetchedMembers);
+      const { data, error } = await supabase
+        .from("members")
+        .select("*")
+        .order("position", { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+      setMembers(data || []);
     } catch (error: any) {
       console.error("Error fetching members:", error);
       toast({
@@ -31,6 +38,22 @@ export const useMemberManager = () => {
 
   useEffect(() => {
     fetchMembers();
+    
+    // Set up real-time subscription for changes
+    const subscription = supabase
+      .channel("members-changes")
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "members",
+      }, () => {
+        fetchMembers();
+      })
+      .subscribe();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleEdit = (member: Member) => {
@@ -40,7 +63,12 @@ export const useMemberManager = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this member?")) {
       try {
-        await membersApi.delete(id);
+        const { error } = await supabase
+          .from("members")
+          .delete()
+          .eq("id", id);
+
+        if (error) throw error;
 
         toast({
           title: "Member deleted",
@@ -61,29 +89,35 @@ export const useMemberManager = () => {
   };
 
   const handleUpdate = async (values: any) => {
-    const achievementsArray = values.achievements
-      .split("\n")
-      .map((a: string) => a.trim())
-      .filter((a: string) => a);
+    const achievementsArray = Array.isArray(values.achievements) 
+      ? values.achievements 
+      : values.achievements
+          .split("\n")
+          .map((a: string) => a.trim())
+          .filter((a: string) => a);
 
     try {
-      const updatedMember = await membersApi.update(editingMember!.id, {
-        name: values.name,
-        image: values.image,
-        role: values.role,
-        join_date: values.joinDate,
-        achievements: achievementsArray,
-        smogon: values.smogon || null,
-        position: editingMember!.position
-      });
+      const { error } = await supabase
+        .from("members")
+        .update({
+          name: values.name,
+          image: values.image,
+          role: values.role,
+          join_date: values.join_date,
+          achievements: achievementsArray,
+          smogon: values.smogon || null,
+        })
+        .eq("id", editingMember!.id);
+
+      if (error) throw error;
 
       toast({
         title: "Member updated",
         description: "The member has been updated successfully",
       });
 
-      setMembers(members.map(m => m.id === editingMember!.id ? updatedMember : m));
       setEditingMember(null);
+      fetchMembers();
     } catch (error: any) {
       console.error("Error updating member:", error);
       toast({
@@ -94,9 +128,53 @@ export const useMemberManager = () => {
     }
   };
 
-  const handleAddMember = () => {
-    // Refresh all members to get the correct order
-    fetchMembers();
+  const handleAddMember = async (values: any) => {
+    try {
+      // Get the count of current members for positioning
+      const { count, error: countError } = await supabase
+        .from("members")
+        .select("*", { count: "exact" });
+
+      if (countError) throw countError;
+      
+      const position = (count || 0) + 1;
+      
+      const achievementsArray = Array.isArray(values.achievements) 
+        ? values.achievements 
+        : values.achievements
+            .split("\n")
+            .map((a: string) => a.trim())
+            .filter((a: string) => a);
+      
+      const { error } = await supabase
+        .from("members")
+        .insert({
+          name: values.name,
+          image: values.image,
+          role: values.role,
+          join_date: values.join_date,
+          achievements: achievementsArray,
+          smogon: values.smogon || null,
+          position,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Member added",
+        description: "The member has been added successfully",
+      });
+
+      setDialogOpen(false);
+      fetchMembers();
+    } catch (error: any) {
+      console.error("Error adding member:", error);
+      toast({
+        title: "Error adding member",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleReordering = () => {
@@ -125,11 +203,22 @@ export const useMemberManager = () => {
       
       // Swap their positions
       const tempPosition = member1.position;
-      member1.position = member2.position;
-      member2.position = tempPosition;
+
+      // Update first member's position
+      const { error: error1 } = await supabase
+        .from("members")
+        .update({ position: member2.position })
+        .eq("id", member1.id);
+        
+      if (error1) throw error1;
       
-      // Update both members with swapped positions
-      await membersApi.swapPositions(member1, member2);
+      // Update second member's position
+      const { error: error2 } = await supabase
+        .from("members")
+        .update({ position: tempPosition })
+        .eq("id", member2.id);
+        
+      if (error2) throw error2;
       
       // Refresh the members to get the updated order
       fetchMembers();

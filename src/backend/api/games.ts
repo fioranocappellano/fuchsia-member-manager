@@ -54,9 +54,21 @@ export const gamesApi = {
    */
   create: async (gameData: Omit<Game, "id" | "created_at" | "updated_at">): Promise<Game> => {
     try {
+      // Ensure position is included
+      if (!gameData.position) {
+        // Get count of games to set as last position
+        const { count, error: countError } = await supabase
+          .from("best_games")
+          .select("*", { count: "exact" });
+        
+        if (countError) throw countError;
+        
+        gameData.position = (count || 0) + 1;
+      }
+
       const { data, error } = await supabase
         .from("best_games")
-        .insert([gameData])
+        .insert(gameData)
         .select()
         .single();
 
@@ -109,25 +121,6 @@ export const gamesApi = {
       }
     } catch (error) {
       console.error(`Error deleting game with ID ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Updates the position of multiple games
-   */
-  updatePositions: async (positionUpdates: { id: string; position: number }[]): Promise<void> => {
-    try {
-      for (const update of positionUpdates) {
-        const { error } = await supabase
-          .from("best_games")
-          .update({ position: update.position })
-          .eq("id", update.id);
-
-        if (error) throw error;
-      }
-    } catch (error) {
-      console.error("Error updating game positions:", error);
       throw error;
     }
   },

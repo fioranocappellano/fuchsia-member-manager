@@ -18,23 +18,26 @@ const MemberManager = () => {
     createMember,
     updateMember,
     deleteMember,
-    updatePosition: updateMemberPosition,
-    refresh
+    changePosition,
+    fetchMembers
   } = useMemberManager();
 
   // Handler for updating a member's position in the list
   const handlePositionChange = async (index: number, direction: 'up' | 'down') => {
     const member = members[index];
     if (member?.id) {
-      await updateMemberPosition(member.id, direction);
+      await changePosition(member.id, direction);
     }
   };
 
   return (
     <div className="space-y-6">
       <MemberManagerHeader 
-        onRefresh={refresh} 
-        loading={loading} 
+        dialogOpen={false} 
+        setDialogOpen={() => {}}
+        reordering={false}
+        toggleReordering={() => {}}
+        handleAddMember={() => {}}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -43,10 +46,10 @@ const MemberManager = () => {
           <MemberList 
             members={members}
             loading={loading}
-            error={error}
-            onSelect={setSelectedMember}
+            reordering={false}
+            onEdit={(member) => setSelectedMember(member)}
             onDelete={deleteMember}
-            onPositionChange={handlePositionChange}
+            onMoveItem={(id, direction) => changePosition(id, direction)}
           />
         </div>
         

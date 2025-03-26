@@ -28,9 +28,9 @@ export const faqsApi = {
   },
 
   /**
-   * Fetches all active FAQs from the database
+   * Fetches active FAQs from the database
    */
-  getAllActive: async (): Promise<FAQ[]> => {
+  getActive: async (): Promise<FAQ[]> => {
     try {
       const { data, error } = await supabase
         .from("faqs")
@@ -48,30 +48,9 @@ export const faqsApi = {
       throw error;
     }
   },
-  
-  /**
-   * Fetches all FAQs for admin purposes
-   */
-  getAllForAdmin: async (): Promise<FAQ[]> => {
-    try {
-      const { data, error } = await supabase
-        .from("faqs")
-        .select("*")
-        .order("position", { ascending: true });
-
-      if (error) {
-        throw error;
-      }
-
-      return data as FAQ[];
-    } catch (error) {
-      console.error("Error fetching FAQs for admin:", error);
-      throw error;
-    }
-  },
 
   /**
-   * Fetches a single FAQ by ID
+   * Fetches a FAQ by ID
    */
   getById: async (id: string): Promise<FAQ> => {
     try {
@@ -99,7 +78,7 @@ export const faqsApi = {
     try {
       const { data, error } = await supabase
         .from("faqs")
-        .insert([faqData])
+        .insert(faqData)
         .select()
         .single();
 
@@ -209,21 +188,6 @@ export const faqsApi = {
       if (updateError2) throw updateError2;
     } catch (error) {
       console.error("Error updating FAQ position:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * Swaps the positions of two FAQs
-   */
-  swapPositions: async (faq1: FAQ, faq2: FAQ): Promise<void> => {
-    try {
-      await Promise.all([
-        supabase.from("faqs").update({ position: faq2.position }).eq("id", faq1.id),
-        supabase.from("faqs").update({ position: faq1.position }).eq("id", faq2.id)
-      ]);
-    } catch (error) {
-      console.error("Error swapping FAQ positions:", error);
       throw error;
     }
   }

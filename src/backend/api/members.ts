@@ -56,7 +56,7 @@ export const membersApi = {
     try {
       const { data, error } = await supabase
         .from("members")
-        .insert([memberData])
+        .insert(memberData) // Pass memberData directly, not in an array
         .select()
         .single();
 
@@ -166,6 +166,32 @@ export const membersApi = {
       if (updateError2) throw updateError2;
     } catch (error) {
       console.error("Error updating member position:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Helper method to swap positions of two members
+   */
+  swapPositions: async (member1: { id: string, position: number }, member2: { id: string, position: number }): Promise<void> => {
+    try {
+      // Update first member
+      const { error: error1 } = await supabase
+        .from("members")
+        .update({ position: member2.position })
+        .eq("id", member1.id);
+
+      if (error1) throw error1;
+
+      // Update second member
+      const { error: error2 } = await supabase
+        .from("members")
+        .update({ position: member1.position })
+        .eq("id", member2.id);
+
+      if (error2) throw error2;
+    } catch (error) {
+      console.error("Error swapping member positions:", error);
       throw error;
     }
   }

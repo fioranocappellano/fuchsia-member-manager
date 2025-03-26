@@ -1,27 +1,27 @@
 
+import React from 'react';
 import { Button } from '@/frontend/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
 interface GameManagerHeaderProps {
-  onRefresh: () => void;
+  onRefresh: () => Promise<void>;
   loading: boolean;
 }
 
-/**
- * Header component for the GameManager with refresh button
- */
-const GameManagerHeader = ({ onRefresh, loading }: GameManagerHeaderProps) => {
+const GameManagerHeader: React.FC<GameManagerHeaderProps> = ({
+  onRefresh,
+  loading
+}) => {
   return (
     <div className="flex justify-between items-center">
-      <h1 className="text-2xl font-bold">Manage Games</h1>
-      <Button 
+      <h1 className="text-2xl font-bold">Games Manager</h1>
+      <Button
         variant="outline"
         size="sm"
         onClick={onRefresh}
         disabled={loading}
-        className="flex items-center gap-2"
       >
-        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
         Refresh
       </Button>
     </div>

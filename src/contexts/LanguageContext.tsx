@@ -1,9 +1,10 @@
+
 import { createContext, useState, useContext, ReactNode } from "react";
 import { it } from "../locales/it";
 import { en } from "../locales/en";
 
 type Locale = "it" | "en";
-type Translations = typeof it;
+type Translations = typeof it & typeof en;
 
 interface LanguageContextType {
   locale: Locale;
@@ -13,8 +14,8 @@ interface LanguageContextType {
 }
 
 const translations = {
-  it,
-  en,
+  it: it as Translations,
+  en: en as Translations,
 };
 
 const LanguageContext = createContext<LanguageContextType>({

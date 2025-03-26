@@ -1,3 +1,4 @@
+
 export const en = {
   appName: "Judgment Fleet",
   home: "Home",
@@ -83,4 +84,43 @@ export const en = {
   titleEn: "Title (EN)",
   titleIt: "Title (IT)",
   judgmentFleetBanner: 'Welcome to Judgment Fleet - Elite Pokémon Tournament Team',
+  
+  // Add missing translations
+  ourCommunity: "Our Community",
+  elitePokemonTitle: "Elite Pokémon Team",
+  communityDescription: "Join our passionate community of competitive Pokémon players.",
+  contactsFounder: "Contacts and Founders",
+  resourcesSection: "Useful Resources",
+  allRightsReserved: "All Rights Reserved",
+  italianCompetitiveSmogon: "Italian Competitive Smogon",
+  discoverMore: "Discover More",
+  resources: "Resources",
+  community: "Community",
+  followOnTwitter: "Follow on Twitter",
+  ourPlayers: "Our Players",
+  playersDescription: "Meet our talented team of competitive Pokémon players.",
+  retry: "Retry",
+  noMembers: "No members available at the moment.",
+  playersSection: "Hall of Fame",
+  checkBestBattles: "Check Out Our Best Battles",
+  viewBestGames: "View Best Games",
+  
+  // Footer
+  footerTagline: "The best of Italian Pokémon competitive scene",
+  siteLinks: "Site Links",
+  usefulResources: "Useful Resources",
+  communityLinks: "Community Links",
+  footerDisclaimer: "Pokémon and related media are trademarks of The Pokémon Company, Nintendo, Game Freak, and Creatures Inc.",
+  
+  // Hero
+  heroTitle: "Welcome to the Elite Pokémon Tournament Team",
+  heroDescription: "We bring together the best Italian players to compete at the highest level of Pokémon battles.",
+  learnMore: "Learn More",
+  scrollForMore: "Scroll for more",
+  
+  // CTA
+  readyToJoin: "Ready to Join the Elite?",
+  ctaDescription: "Join our community of competitive Pokémon players and take your game to the next level.",
+  joinToTwitter: "Join via Twitter",
+  alreadyMember: "Already a member? Check your Discord for the latest tournaments."
 };

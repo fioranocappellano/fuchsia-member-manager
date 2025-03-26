@@ -2,38 +2,28 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/frontend/hooks/use-toast';
 import { Member } from '@/frontend/types/api';
-import { membersApi } from '@/backend/api';
+import { membersApi } from '@/backend/api/members';
 
-/**
- * Hook for managing team members
- */
-export function useMemberManager() {
+export const useMemberManager = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Load members on mount
-  useEffect(() => {
-    loadMembers();
-  }, []);
-
-  /**
-   * Load all members from the API
-   */
-  const loadMembers = async () => {
+  const fetchMembers = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError(null);
+      
       const data = await membersApi.getAll();
       setMembers(data);
+      
     } catch (err: any) {
-      console.error('Error loading members:', err);
-      setError(err.message || 'Failed to load members');
+      setError(err.message || 'Failed to fetch members');
       toast({
-        title: 'Error',
-        description: 'Failed to load members',
+        title: 'Error fetching members',
+        description: err.message || 'Something went wrong',
         variant: 'destructive',
       });
     } finally {
@@ -41,159 +31,101 @@ export function useMemberManager() {
     }
   };
 
-  /**
-   * Add a new member
-   */
-  const addMember = async (memberData: Omit<Member, 'id'>) => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      const newMember = await membersApi.create(memberData);
-      
-      setMembers(prevMembers => [...prevMembers, newMember]);
-      
-      toast({
-        title: 'Success',
-        description: 'Member added successfully',
-      });
-      
-      return newMember;
-    } catch (err: any) {
-      console.error('Error adding member:', err);
-      setError(err.message || 'Failed to add member');
-      toast({
-        title: 'Error',
-        description: 'Failed to add member',
-        variant: 'destructive',
-      });
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchMembers();
+  }, []);
 
-  /**
-   * Update an existing member
-   */
-  const updateMember = async (id: string, memberData: Partial<Member>) => {
+  const createMember = async (memberData: Omit<Member, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       setLoading(true);
-      setError('');
       
-      const updatedMember = await membersApi.update(id, memberData);
-      
-      setMembers(prevMembers => 
-        prevMembers.map(member => 
-          member.id === id ? updatedMember : member
-        )
-      );
-      
-      if (selectedMember?.id === id) {
-        setSelectedMember(updatedMember);
+      // Calculate position if not provided
+      if (!memberData.position) {
+        memberData.position = members.length + 1;
       }
       
+      await membersApi.create(memberData);
+      
       toast({
-        title: 'Success',
-        description: 'Member updated successfully',
+        title: 'Member created',
+        description: 'The member was created successfully',
       });
       
-      return updatedMember;
+      await fetchMembers();
+      return true;
     } catch (err: any) {
-      console.error('Error updating member:', err);
-      setError(err.message || 'Failed to update member');
       toast({
-        title: 'Error',
-        description: 'Failed to update member',
+        title: 'Error creating member',
+        description: err.message || 'Something went wrong',
         variant: 'destructive',
       });
-      throw err;
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * Delete a member
-   */
+  const updateMember = async (memberData: Partial<Member> & { id: string }) => {
+    try {
+      setLoading(true);
+      
+      await membersApi.update(memberData.id, memberData);
+      
+      toast({
+        title: 'Member updated',
+        description: 'The member was updated successfully',
+      });
+      
+      await fetchMembers();
+      return true;
+    } catch (err: any) {
+      toast({
+        title: 'Error updating member',
+        description: err.message || 'Something went wrong',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const deleteMember = async (id: string) => {
     try {
       setLoading(true);
-      setError('');
       
-      await membersApi.deleteMember(id);
-      
-      setMembers(prevMembers => prevMembers.filter(member => member.id !== id));
-      
-      if (selectedMember?.id === id) {
-        setSelectedMember(null);
-      }
+      await membersApi.delete(id);
       
       toast({
-        title: 'Success',
-        description: 'Member deleted successfully',
+        title: 'Member deleted',
+        description: 'The member was deleted successfully',
       });
+      
+      await fetchMembers();
     } catch (err: any) {
-      console.error('Error deleting member:', err);
-      setError(err.message || 'Failed to delete member');
       toast({
-        title: 'Error',
-        description: 'Failed to delete member',
+        title: 'Error deleting member',
+        description: err.message || 'Something went wrong',
         variant: 'destructive',
       });
-      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * Change the position of a member
-   */
   const changePosition = async (id: string, direction: 'up' | 'down') => {
     try {
       setLoading(true);
-      setError('');
       
-      // Find the current member and the one to swap with
-      const memberIndex = members.findIndex(m => m.id === id);
-      if (memberIndex === -1) {
-        throw new Error('Member not found');
-      }
+      await membersApi.updatePosition(id, direction);
       
-      let targetIndex;
-      if (direction === 'up' && memberIndex > 0) {
-        targetIndex = memberIndex - 1;
-      } else if (direction === 'down' && memberIndex < members.length - 1) {
-        targetIndex = memberIndex + 1;
-      } else {
-        // Already at the top or bottom
-        setLoading(false);
-        return;
-      }
-      
-      const member1 = members[memberIndex];
-      const member2 = members[targetIndex];
-      
-      // Swap positions using the API
-      await membersApi.swapPositions(member1, member2);
-      
-      // Reload members to get the updated positions
-      await loadMembers();
-      
-      toast({
-        title: 'Success',
-        description: `Member moved ${direction} successfully`,
-      });
+      await fetchMembers();
     } catch (err: any) {
-      console.error('Error changing member position:', err);
-      setError(err.message || 'Failed to change member position');
       toast({
-        title: 'Error',
-        description: 'Failed to change member position',
+        title: 'Error changing position',
+        description: err.message || 'Something went wrong',
         variant: 'destructive',
       });
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -205,10 +137,10 @@ export function useMemberManager() {
     setSelectedMember,
     loading,
     error,
-    loadMembers,
-    addMember,
+    createMember,
     updateMember,
     deleteMember,
     changePosition,
+    refresh: fetchMembers
   };
-}
+};

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useGameManager } from "./games/useGameManager";
+import { useGameManager } from "../admin/games/useGameManager";
 import GameManagerHeader from "./games/GameManagerHeader";
 import GameList from "./games/GameList";
 import GameEditForm from "./games/GameEditForm";
