@@ -2,15 +2,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import PlayerCard from "./PlayerCard";
-import { useLanguage } from "../contexts/LanguageContext";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import PlayerCard from "@/frontend/components/PlayerCard";
+import { useLanguage } from "@/frontend/contexts/LanguageContext";
+import { Skeleton } from "@/frontend/components/ui/skeleton";
+import { Button } from "@/frontend/components/ui/button";
 import { RefreshCw, ArrowRight } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/frontend/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Member } from "@/types/api";
-import { membersApi } from "@/services/api";
+import { Member } from "@/frontend/types/api";
+import { membersApi } from "@/backend/api";
 
 const TopMembers = () => {
   const { translations } = useLanguage();

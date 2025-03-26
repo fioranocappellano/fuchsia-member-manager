@@ -1,184 +1,172 @@
 
-# Judgment Fleet - Architettura del Sistema
+# Judgment Fleet Website
 
-## Panoramica
+This repository contains the code for the Judgment Fleet website, an elite Pokémon competitive team. The codebase is organized with a clear separation between frontend and backend components, making it maintainable and easy to understand.
 
-Questo progetto è un'applicazione web per la community di Judgment Fleet, con una chiara separazione tra frontend e backend.
+## Project Structure
 
-L'applicazione è strutturata secondo il pattern architetturale Frontend-Backend, facilitando la manutenzione, il testing e la possibilità di sostituire facilmente l'implementazione del backend (ad esempio passando da Supabase a un altro servizio) senza modificare il frontend.
-
-## Struttura delle Cartelle
+The project is organized into two main directories:
 
 ```
 src/
-├── frontend/             # Tutto il codice relativo al frontend
-│   ├── components/       # Componenti UI riutilizzabili
-│   ├── hooks/            # Hook personalizzati React
-│   ├── pages/            # Componenti pagina
-│   ├── contexts/         # Context providers React
-│   ├── utils/            # Utility funzioni per il frontend
-│   └── types/            # Tipi TypeScript per il frontend
-│
-├── backend/              # Tutto il codice relativo al backend
-│   └── api/              # Moduli API per comunicare con il database
-│
-├── integrations/         # Integrazioni con servizi esterni (Supabase)
-├── contexts/             # Context providers React globali
-├── hooks/                # Hook globali condivisi
-└── utils/                # Utility funzioni condivise
+├── frontend/           # Frontend components, hooks, contexts, and pages
+│   ├── components/     # UI components
+│   ├── contexts/       # React context providers
+│   ├── hooks/          # Custom React hooks
+│   ├── pages/          # Page components
+│   ├── types/          # TypeScript type definitions
+│   └── utils/          # Utility functions
+├── backend/           # Backend API and services
+│   ├── api/           # API endpoints
+│   └── services/      # Backend services
+└── integrations/      # Third-party integrations
+    └── supabase/      # Supabase client and types
 ```
 
-## Architettura Frontend-Backend
+## Architecture Overview
 
-### Frontend
+This application follows a clean architecture pattern with clear separation of concerns:
 
-- **Interfaccia Utente**: Implementata con React, React Router, e Tailwind CSS.
-- **Gestione Stato**: Utilizzo di React Context e TanStack Query per la gestione dello stato globale e delle richieste dati.
-- **Componenti**: Organizzati in modo modulare, riutilizzabili e focalizzati su specifiche funzionalità.
-- **Internazionalizzazione**: Supporto multilingua tramite il LanguageContext.
+1. **Frontend Layer**: Contains all UI components, pages, and client-side logic
+2. **Backend Layer**: Handles data fetching, manipulation, and business logic
+3. **Integration Layer**: Manages connections to external services (Supabase in this case)
 
-### Backend
+## Frontend Components
 
-- **API**: Interfacce ben definite per tutte le operazioni di dati.
-- **Implementazione**: Attualmente basata su Supabase, ma facilmente sostituibile.
-- **Servizi**: Moduli separati per membri, giochi, FAQ e autenticazione.
+### Core Components
 
-## Moduli Principali e Loro Funzioni
+- **Navbar**: Main navigation component that allows users to navigate between different sections of the site
+- **Hero**: The main landing section of the homepage
+- **Community**: Section showcasing the community aspects of Judgment Fleet
+- **TopMembers**: Component displaying the team's top members with their achievements
+- **PlayerCard**: Individual card displaying a team member's information
+- **LanguageSelector**: Component for switching between Italian and English languages
+- **Footer**: Footer component with links and copyright information
 
-### API Backend
+### Admin Components
 
-#### membersApi
-- **getAll()**: Recupera tutti i membri ordinati per posizione.
-- **getById(id)**: Recupera un membro specifico tramite ID.
-- **create(member)**: Crea un nuovo membro.
-- **update(id, member)**: Aggiorna un membro esistente.
-- **delete(id)**: Elimina un membro.
-- **swapPositions(member1, member2)**: Scambia la posizione di due membri.
+- **GameManager**: Component for managing best games with CRUD operations
+- **MemberManager**: Component for managing team members with CRUD operations
+- **FAQManager**: Component for managing FAQ entries with CRUD operations
 
-#### gamesApi
-- **getAll()**: Recupera tutti i giochi ordinati per posizione.
-- **getById(id)**: Recupera un gioco specifico tramite ID.
-- **create(game)**: Crea un nuovo gioco.
-- **update(id, game)**: Aggiorna un gioco esistente.
-- **delete(id)**: Elimina un gioco.
-- **swapPositions(game1, game2)**: Scambia la posizione di due giochi.
+### UI Components
 
-#### faqsApi
-- **getAll()**: Recupera tutte le FAQ attive.
-- **getAllForAdmin()**: Recupera tutte le FAQ (attive e non) per l'admin.
-- **getById(id)**: Recupera una FAQ specifica tramite ID.
-- **create(faq)**: Crea una nuova FAQ.
-- **update(id, faq)**: Aggiorna una FAQ esistente.
-- **delete(id)**: Elimina una FAQ.
-- **swapPositions(faq1, faq2)**: Scambia la posizione di due FAQ.
+Various UI components from the shadcn/ui library, customized for the Judgment Fleet design system.
 
-#### authApi
-- **signIn(email, password)**: Effettua il login di un utente.
-- **signOut()**: Effettua il logout dell'utente corrente.
-- **checkIsAdmin(userId)**: Verifica se l'utente è un amministratore.
-- **resetPassword(email)**: Invia un'email per il reset della password.
-- **updatePassword(newPassword)**: Aggiorna la password dell'utente.
-- **getCurrentUser()**: Ottiene l'utente corrente dalla sessione.
+## Backend API
 
-### Componenti Frontend
+The backend layer is organized into API modules that handle specific data entities:
 
-#### Navbar
-- Gestisce la navigazione tra le pagine e le sezioni.
-- Supporta sia la navigazione desktop che mobile.
-- Mostra linguette extra per gli admin.
+### Members API
 
-#### JudgmentFleetBanner
-- Mostra lo sfondo con il nome del team.
-- Applica animazioni all'entrata.
+The `membersApi` object provides the following functions:
 
-#### PlayerCard
-- Visualizza informazioni di un membro del team.
-- Gestisce errori di caricamento immagini con fallback.
-- Mostra collegamenti ai profili Smogon.
+- `getAll()`: Fetches all team members from the database
+- `getById(id)`: Fetches a specific member by ID
+- `create(member)`: Creates a new team member
+- `update(id, member)`: Updates an existing team member
+- `delete(id)`: Deletes a team member
+- `swapPositions(member1, member2)`: Swaps the positions of two members for reordering
 
-#### TopMembers
-- Visualizza tutti i membri del team.
-- Gestisce la logica di caricamento e visualizzazione.
-- Aggiorna i dati in tempo reale con Supabase.
+### Games API
 
-#### LanguageSelector
-- Permette agli utenti di cambiare lingua.
-- Mantiene la posizione di scroll durante il cambio.
+The `gamesApi` object provides the following functions:
 
-#### Footer
-- Mostra informazioni di contatto e risorse.
-- Carica risorse dinamicamente dal database.
+- `getAll()`: Fetches all best games from the database
+- `getById(id)`: Fetches a specific game by ID
+- `create(game)`: Creates a new best game
+- `update(id, game)`: Updates an existing best game
+- `delete(id)`: Deletes a best game
+- `swapPositions(game1, game2)`: Swaps the positions of two games for reordering
 
-### Hooks Frontend
+### FAQs API
 
-#### usePasswordReset
-- **resetPassword(email)**: Gestisce la richiesta di reset della password.
-- Integra notifiche toast per feedback all'utente.
+The `faqsApi` object provides similar CRUD operations for FAQ entries.
 
-#### useGameManager
-- **fetchGames()**: Carica i giochi dal database.
-- **handleEdit(game)**: Prepara un gioco per la modifica.
-- **handleDelete(id)**: Elimina un gioco.
-- **handleUpdate(values)**: Aggiorna un gioco esistente.
-- **moveItem(id, direction)**: Sposta un gioco nell'ordine.
-- **toggleReordering()**: Attiva/disattiva la modalità riordinamento.
+### Auth API
 
-#### useMemberManager
-- **fetchMembers()**: Carica i membri dal database.
-- **handleEdit(member)**: Prepara un membro per la modifica.
-- **handleDelete(id)**: Elimina un membro.
-- **handleUpdate(values)**: Aggiorna un membro esistente.
-- **moveItem(id, direction)**: Sposta un membro nell'ordine.
-- **toggleReordering()**: Attiva/disattiva la modalità riordinamento.
+The `authApi` object handles authentication and user management:
 
-#### useFAQManager
-- **fetchFaqs()**: Carica le FAQ dal database.
-- **handleEdit(faq)**: Prepara una FAQ per la modifica.
-- **handleDelete(id)**: Elimina una FAQ.
-- **handleUpdate(values)**: Aggiorna una FAQ esistente.
-- **handleToggleActive(id, isActive)**: Attiva/disattiva una FAQ.
-- **moveItem(id, direction)**: Sposta una FAQ nell'ordine.
-- **toggleReordering()**: Attiva/disattiva la modalità riordinamento.
+- `signIn(email, password)`: Authenticates a user
+- `signOut()`: Signs out the current user
+- `checkIsAdmin(userId)`: Checks if a user has admin privileges
+- `resetPassword(email)`: Initiates a password reset process
+- `updatePassword(newPassword)`: Updates a user's password
+- `getCurrentUser()`: Retrieves the currently authenticated user
 
-### Utils Frontend
+## Contexts
 
-#### imageUtils
-- **normalizeImageUrl(imagePath)**: Normalizza gli URL delle immagini per garantire che siano corretti.
+### LanguageContext
 
-### Contexts
+Provides internationalization capabilities:
 
-#### LanguageContext
-- Gestisce lo stato della lingua corrente (italiano/inglese).
-- Fornisce le traduzioni appropriate in base alla lingua selezionata.
+- `locale`: Current language (it/en)
+- `translations`: Text translations for the current language
+- `setLocale(locale)`: Function to change the current language
 
-#### AuthContext
-- Gestisce lo stato di autenticazione dell'utente.
-- Verifica se l'utente è un amministratore.
-- Fornisce funzioni di login/logout.
+### AuthContext
 
-## Flusso dei Dati
+Manages user authentication state:
 
-1. I componenti React nel frontend utilizzano hooks personalizzati per accedere alle funzionalità.
-2. Gli hooks interagiscono con l'API del backend quando necessario.
-3. L'API del backend comunica con Supabase per le operazioni sul database.
-4. I risultati vengono restituiti al frontend attraverso l'interfaccia API.
+- `user`: Current authenticated user or null
+- `isAdmin`: Boolean indicating if the current user has admin privileges
+- `loading`: Loading state for authentication
+- `signIn(email, password)`: Function to sign in a user
+- `signOut()`: Function to sign out the current user
 
-## Vantaggi dell'Architettura
+## Hooks
 
-1. **Separazione delle Responsabilità**: Frontend e backend chiaramente separati con interfacce ben definite.
-2. **Sostituibilità**: Possibilità di sostituire l'implementazione backend senza modificare il frontend.
-3. **Testabilità**: Componenti e moduli possono essere testati in isolamento.
-4. **Manutenibilità**: Struttura organizzata che facilita l'aggiunta di nuove funzionalità.
-5. **Scalabilità**: L'architettura supporta la crescita del progetto mantenendo la qualità del codice.
+### use-toast
 
-## Tecnologie Utilizzate
+Custom hook for displaying toast notifications. Used throughout the application to provide user feedback.
 
-- **Frontend**: React, TypeScript, Tailwind CSS, TanStack Query, Framer Motion
-- **Backend**: Supabase (Database, Autenticazione, Storage)
-- **Strumenti di Build**: Vite
+### useGameManager
 
-## TO-DO:
-1) Implementare una SEO più efficiente
-2) Miglioramenti Admin Dashboard
-3) Sistemare Bottoni Homepage
-4) Possibile Dashboard Statistiche
+Manages the state and operations for the game management interface:
+
+- Fetching, creating, updating, and deleting games
+- Handling reordering of games
+- Managing UI state (loading, dialog open/close, etc.)
+
+### useMemberManager
+
+Similar to useGameManager but for team members.
+
+### useFAQManager
+
+Similar to useGameManager but for FAQ entries.
+
+## Database Schema
+
+The application uses Supabase as its backend database with the following main tables:
+
+- **members**: Stores team member information
+- **best_games**: Stores the best games showcase
+- **faqs**: Stores FAQ entries
+- **admins**: Stores admin user information
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start the development server: `npm run dev`
+
+## Environment Variables
+
+The application uses the following environment variables:
+
+- `VITE_SUPABASE_URL`: Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous key for client-side operations
+
+## Deployment
+
+The application is deployed using Netlify, with continuous deployment set up from the main branch.
+
+## Credits
+
+- **UI Framework**: React with Vite
+- **Styling**: Tailwind CSS with custom theme
+- **Backend**: Supabase for authentication, database, and storage
+- **Icons**: Lucide React
+- **UI Components**: shadcn/ui
+- **Animations**: Framer Motion

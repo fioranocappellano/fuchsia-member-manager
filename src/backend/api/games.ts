@@ -8,7 +8,7 @@ import { Game } from "@/frontend/types/api";
  */
 export const getAll = async (): Promise<Game[]> => {
   const { data, error } = await supabase
-    .from("games")
+    .from("best_games")
     .select("*")
     .order("position", { ascending: true });
 
@@ -27,7 +27,7 @@ export const getAll = async (): Promise<Game[]> => {
  */
 export const getById = async (id: string): Promise<Game> => {
   const { data, error } = await supabase
-    .from("games")
+    .from("best_games")
     .select("*")
     .eq("id", id)
     .single();
@@ -47,7 +47,7 @@ export const getById = async (id: string): Promise<Game> => {
  */
 export const create = async (game: Omit<Game, "id" | "created_at" | "updated_at">): Promise<Game> => {
   const { data, error } = await supabase
-    .from("games")
+    .from("best_games")
     .insert(game)
     .select()
     .single();
@@ -68,7 +68,7 @@ export const create = async (game: Omit<Game, "id" | "created_at" | "updated_at"
  */
 export const update = async (id: string, game: Partial<Game>): Promise<Game> => {
   const { data, error } = await supabase
-    .from("games")
+    .from("best_games")
     .update(game)
     .eq("id", id)
     .select()
@@ -89,7 +89,7 @@ export const update = async (id: string, game: Partial<Game>): Promise<Game> => 
  */
 export const delete_ = async (id: string): Promise<boolean> => {
   const { error } = await supabase
-    .from("games")
+    .from("best_games")
     .delete()
     .eq("id", id);
 
@@ -111,14 +111,14 @@ export const swapPositions = async (game1: Game, game2: Game): Promise<boolean> 
   try {
     // Aggiorna il primo gioco
     await supabase
-      .from("games")
-      .update({ position: game1.position })
+      .from("best_games")
+      .update({ position: game2.position })
       .eq("id", game1.id);
 
     // Aggiorna il secondo gioco
     await supabase
-      .from("games")
-      .update({ position: game2.position })
+      .from("best_games")
+      .update({ position: game1.position })
       .eq("id", game2.id);
 
     return true;

@@ -2,11 +2,11 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Twitter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/frontend/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useLanguage } from "../contexts/LanguageContext";
-import LanguageSelector from "./LanguageSelector";
-import { useAuth } from "../contexts/AuthContext";
+import { useLanguage } from "@/frontend/contexts/LanguageContext";
+import LanguageSelector from "@/frontend/components/LanguageSelector";
+import { useAuth } from "@/frontend/contexts/AuthContext";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
