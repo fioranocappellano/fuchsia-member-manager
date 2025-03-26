@@ -23,11 +23,15 @@ export const useGameManager = () => {
       if (error) throw error;
       
       // Ensure all games have required properties
-      const processedGames = (data || []).map(game => ({
-        ...game,
-        winner: game.winner || "", // Add winner property if it doesn't exist
-        updated_at: game.updated_at || game.created_at || new Date().toISOString()
-      })) as Game[];
+      const processedGames = (data || []).map(game => {
+        // Here we need to add the winner property if it doesn't exist in the database
+        // TypeScript is complaining because the database schema doesn't include 'winner'
+        return {
+          ...game,
+          winner: "", // Add a default empty string for winner
+          updated_at: game.updated_at || game.created_at || new Date().toISOString()
+        };
+      }) as Game[];
       
       setGames(processedGames);
     } catch (error: any) {

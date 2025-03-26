@@ -66,11 +66,11 @@ const GameManager = () => {
             reordering={false}
             onEdit={setSelectedGame}
             onDelete={deleteGame}
-            onMoveItem={(id, direction) => {
+            onMoveItem={async (id, direction) => {
               // Convert numeric index to ID
               const gameId = typeof id === 'number' ? games[id]?.id : id;
               if (gameId) {
-                handlePositionChange(games.findIndex(g => g.id === gameId), direction).catch(console.error);
+                await handlePositionChange(games.findIndex(g => g.id === gameId), direction);
               }
             }}
           />

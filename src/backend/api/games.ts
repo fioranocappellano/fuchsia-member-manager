@@ -20,7 +20,13 @@ export const gamesApi = {
         throw error;
       }
 
-      return data as Game[];
+      // Add winner property to each game
+      const gamesWithWinner = data.map(game => ({
+        ...game,
+        winner: "" // Default empty string for winner
+      }));
+
+      return gamesWithWinner as Game[];
     } catch (error) {
       console.error("Error fetching games:", error);
       throw error;
